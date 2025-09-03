@@ -39,10 +39,13 @@
                 <div class="tab-container">
 
                     <div id="previewSection">
-                        <div id="dataPlaceholder" class="data-placeholder">
-                            <p>请先上传右侧需求数据</p>
-                            <p>点击"预览数据"按钮后，预览数据将显示在这里</p>
-                        </div>
+                        <ul id="dataPlaceholder" class="data-placeholder">
+                            <li>1. 上传映射表,填写批次,点击成表单</li>
+                            <li>2. 点击"打印当前表"按钮,预览所需表</li>
+                            <li>3. 空版检货汇总-快速检货使用</li>
+                            <li>4. 烫画数量汇总-叫不同大小的烫画</li>
+                            <li>5. JIT生产明细-压烫和贴条码对照用</li>
+                        </ul>
                         <div id="dataTable" class="tab-content active" data-tab="data"></div>
                         <div id="skcSummary" class="tab-content" data-tab="skc"></div>
                         <div id="patternSummary" class="tab-content" data-tab="pattern"></div>
@@ -53,7 +56,7 @@
             <!-- 右侧：上传控制面板 (30%) -->
             <div class="card upload-card">
                 <div class="upload-section">
-                    <h3>上传SKU映射表</h3>
+                    <div class="upload-title">SKU-SKC映射表</div>
                     <input type="file" id="mappingFile" class="file-input" accept=".xlsx,.xls,.csv">
                     <button class="upload-btn" onclick="document.getElementById('mappingFile').click()">
                         选择Excel/CSV格式文件
@@ -61,9 +64,26 @@
                     <div id="mappingStatus" class="status">等待上传映射表...</div>
                     <div id="mappingError" class="error"></div>
                 </div>
-
                 <div class="upload-section">
-                    <h3>上传销售数据</h3>
+                    <div class="upload-title">SKC-印花大小映射表</div>
+                    <input type="file" id="skcMappingFile" class="file-input" accept=".xlsx,.xls,.csv">
+                    <button class="upload-btn" onclick="document.getElementById('skcMappingFile').click()">
+                        选择Excel/CSV格式文件
+                    </button>
+                    <div id="skcMappingStatus" class="status">等待上传映射表...</div>
+                    <div id="skcMappingError" class="error"></div>
+                </div>
+                <div class="upload-section">
+                    <div class="upload-title">印花图片映射表</div>
+                    <input type="file" class="file-input" id="patternImageFile" accept=".csv,.xls,.xlsx" />
+                    <button class="upload-btn" onclick="document.getElementById('patternImageFile').click()">
+                        选择Excel/CSV格式文件
+                    </button>
+                    <div id="patternImageStatus" class="status">等待上传映射表...</div>
+                    <div id="patternImageError" class="error"></div>
+                </div>
+                <div class="upload-section">
+                    <div class="upload-title">销售数据表</div>
                     <input type="file" id="salesFile" class="file-input" accept=".xlsx,.xls,.csv" disabled>
                     <button class="upload-btn" onclick="document.getElementById('salesFile').click()" id="salesBtn"
                         disabled>
@@ -79,9 +99,9 @@
                 </div>
 
                 <div class="no-print">
-                    <button class="preview-btn" id="previewBtn" disabled>数据预览</button>
+                    <button class="preview-btn" id="previewBtn" disabled>生成表单</button>
                     <button class="preview-btn" id="downloadDeleteBtn" disabled>备份并删除选中数据</button>
-                    <button class="preview-btn" id="copyBtn" disabled>批量复制原始款号</button>
+                    <button class="preview-btn" id="copyBtn" disabled>下载条码表</button>
                 </div>
             </div>
         </div>
