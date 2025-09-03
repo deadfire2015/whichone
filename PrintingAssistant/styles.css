@@ -1,0 +1,785 @@
+/* ========== 合并后的样式 ========== */
+/* 全局样式重置 */
+:root {
+    --borderRadius-main: 12px;
+    --borderRadius-second: 8px;
+    --borderRadius-third: 4px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    padding: 0;
+    margin: 0;
+    background-color: #f8f8f8;
+}
+
+.layout-container {
+    display: flex;
+    flex-direction: column;
+    padding: 1vh;
+    gap: 1vh;
+    background-color: #ffffff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: var(--borderRadius-main);
+    overflow: hidden;
+    margin: 1vh 1vw;
+}
+
+/* 容器样式 */
+.styles-container,
+.stamps-container {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.5vw;
+    align-items: flex-start;
+    border-radius: var(--borderRadius-second);
+    padding-right: 50px;
+}
+
+.styles-container {
+    height: 60vh;
+    padding-bottom: 0;
+}
+
+.stamps-container {
+    background-color: #ffffff;
+    height: 14vh;
+}
+
+.styles-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* 项目样式 */
+.styles-container>.style-item,
+.stamps-container>.stamp-item {
+    position: relative;
+    display: inline-block;
+    flex: 0 0 auto;
+    width: auto;
+    height: 100%;
+    background: #f5f5f5;
+    cursor: pointer;
+}
+
+.styles-container>.style-item>.styleBg {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    cursor: auto;
+}
+
+/* 图片样式 */
+.styles-container>.style-item img,
+.stamps-container>.stamp-item img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--borderRadius-second);
+}
+
+/* 上传区域样式 */
+.upload-area {
+    position: fixed;
+    width: 100vw;
+    height: 13vh;
+    bottom: 14px;
+    margin: auto;
+    display: flex;
+    gap: 1vw;
+    padding: 0 1vw;
+    z-index: 99;
+    align-items: flex-start;
+}
+
+.upload-container {
+    border: 1px dashed #141212;
+    width: 40vw;
+    height: 100%;
+    border-radius: var(--borderRadius-main);
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.upload-container:hover {
+    background-color: #d5edff;
+}
+
+.upload-container.drag-over {
+    border-color: #1c1b1f;
+    background-color: #d5edff;
+    color: rgb(0, 24, 71);
+}
+
+.upload-container>span {
+    font-size: 14px;
+    color: #919598;
+    display: block;
+}
+
+.upload-input {
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    cursor: pointer;
+}
+
+.button-container {
+    width: 16vw;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+
+
+/* 图章项目样式 */
+.stamp-item {
+    display: flex;
+    align-items: center;
+    background: #f5f5f5;
+    border-radius: var(--borderRadius-second);
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.stamp-item.new-upload {
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.8);
+    transform: scale(1.02);
+}
+
+.sequence-number {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: auto;
+    height: 24px;
+    padding: 0 4px;
+    background-color: rgba(255, 255, 255, 1);
+    color: rgb(23, 22, 22);
+    border-radius: 6px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.file-name {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    max-width: calc(100% - 10px);
+    padding: 0 6px;
+    height: 24px;
+    color: #000;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 6px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 10;
+    cursor: default;
+    backdrop-filter: blur(2px);
+}
+
+.style-item>.file-name {
+    top: 4px;
+    left: 26px;
+    bottom: auto;
+    width: auto;
+}
+
+.delete-stamp {
+    position: absolute;
+    display: flex;
+    width: 32px;
+    height: 24px;
+    right: 4px;
+    top: 4px;
+    background: #d32f2f78;
+    color: rgb(255, 255, 255);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    z-index: 90;
+    backdrop-filter: blur(2px);
+}
+
+.delete-stamp:hover {
+    background-color: #d32f2f;
+    box-shadow: 0 0 4px rgba(255, 0, 0, 0.8);
+}
+
+.button-group {
+    position: absolute;
+    width: 100%;
+    bottom: 8px;
+    display: flex;
+    gap: 2%;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.button-group>* {
+    color: #ffffff;
+    height: 100%;
+    padding: 0 7px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    z-index: 99;
+    display: flex;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    border: 1px solid #ffffff7f;
+}
+
+.icons {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    filter: brightness(0) invert(1);
+}
+
+.upload-title {
+    display: flex;
+    align-items: middle;
+    /* 垂直居中 */
+    gap: 6px;
+    height: 20px;
+}
+
+.upload-title>span {
+    line-height: 19px;
+    font-size: 18px;
+}
+
+.upload-title>.iconsBig {
+    width: 18px;
+    height: 18px;
+    /* justify-self: center; */
+}
+
+.mix {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: var(--borderRadius-main);
+    background-color: rgb(0, 2, 17);
+    color: white;
+    font-size: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.mix:hover {
+    background-color: #001f2a;
+}
+
+
+.mix>.iconslarge {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
+}
+
+.button-group>*:hover {
+    opacity: 1;
+    border: 1px solid #0000007f;
+    background-color: #0e0e0ff5;
+    box-shadow: 0 6px 20px rgba(7, 20, 81, 0.4);
+}
+
+/* 预览区域样式 */
+.preview-section {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
+
+/* 删除全部按钮样式 */
+.clear-all-btn {
+    position: absolute;
+    right: 0px;
+    z-index: 99;
+    width: 40px;
+    padding: 6px 12px;
+    background-color: #d32f2f6a;
+    color: white;
+    border: none;
+    border-radius: var(--borderRadius-second);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    height: 100%;
+    backdrop-filter: blur(10px);
+}
+
+.clear-all-btn:hover {
+    background-color: #b71c1c;
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.4);
+}
+
+/* 位置标记样式 */
+.position-markers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.position-marker {
+    position: absolute;
+    width: 30%;
+    height: 30%;
+    background-color: rgba(76, 175, 80, 0.3);
+    border: 2px solid #4CAF50;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    cursor: pointer;
+    transform-origin: center;
+    /* 默认值，可改为其他坐标（如 0 0） */
+    transform-origin: 50% 50%;
+}
+
+.position-marker.rotating {
+    background-color: rgba(255, 193, 7, 0.5);
+    border: 2px solid #FFC107;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+}
+
+.position-marker .rotate-angle {
+    position: absolute;
+    top: -70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    user-select: none;
+    cursor: none;
+    pointer-events: none;
+}
+
+.position-marker.rotating .rotate-angle {
+    opacity: 1;
+}
+
+.position-marker[data-active="false"] {
+    background-color: rgba(255, 0, 0, 0.2);
+    border: 2px dashed #FF0000;
+    opacity: 0.5;
+}
+
+.position-marker.selected {
+    background-color: rgba(255, 193, 7, 0.5);
+    border: 2px solid #FFC107;
+    opacity: 1;
+}
+
+.position-marker span {
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 0 3px #000;
+    pointer-events: none;
+}
+
+.ui-resizable-handle {
+    width: 10px;
+    height: 10px;
+    background: #4CAF50;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+.rotate-handle {
+    position: absolute;
+    top: -40px;
+    margin: auto;
+    width: 32px;
+    height: 32px;
+    background: #4CAF50;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 32px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10;
+    user-select: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.rotate-handle:hover {
+    background: #3e8e41;
+    transform: scale(1.2);
+}
+
+.rotate-handle:active,
+.position-marker.rotating .rotate-handle {
+    background: #2e7d32;
+    transform: scale(1.1);
+}
+
+.rotate-handle::before {
+    content: "↻";
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.status-display {
+    position: fixed;
+    left: 15vw;
+    bottom: 18vh;
+    margin: 15px auto;
+    padding: 10px;
+    background: #f8f8f8;
+    border-radius: var(--borderRadius-third);
+    text-align: center;
+    max-width: 600px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+}
+
+.stamp-on-style {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+    top: 0;
+}
+
+.stamp-on-style img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    object-position: top;
+}
+
+/* Tooltips基础样式 */
+[data-tooltip] {
+    cursor: pointer;
+}
+
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 12px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: var(--borderRadius-third);
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 1000;
+    pointer-events: none;
+    height: 20px;
+
+}
+
+[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-8px);
+}
+
+.sequence-number[data-tooltip]::after,
+.delete-stamp[data-tooltip]::after {
+    top: 100%;
+}
+
+.sequence-number[data-tooltip]:hover::after,
+.delete-stamp[data-tooltip]:hover::after {
+    transform: translateX(-50%) translateY(8px);
+}
+
+/* 下载蒙层样式 */
+.download-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    /* opacity: 0; */
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.download-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.download-progress {
+    background-color: white;
+    padding: 20px;
+    border-radius: var(--borderRadius-second);
+    width: 300px;
+    text-align: center;
+}
+
+.progress-bar {
+    height: 10px;
+    width: 100%;
+    background-color: #f0f0f0;
+    border-radius: var(--borderRadius-third);
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.progress-bar::after {
+    content: '';
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: repeating-linear-gradient(45deg,
+            #1c2337,
+            #1c2337 10px,
+            #495370 10px,
+            #495370 20px);
+    background-size: 28px 28px;
+    animation: progress 0.5s linear infinite;
+    -webkit-animation: progress 0.5s linear infinite;
+}
+
+.progress-text {
+    font-size: 14px;
+    color: #333;
+}
+
+.stamp-position-display {
+    position: relative;
+    background: #ffe65b3e;
+    border: 1px solid #ffe65bcc;
+    color: rgb(54, 2, 2);
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+    z-index: 1000;
+    border-radius: var(--borderRadius-second);
+}
+
+@keyframes progress {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 28px 0px;
+    }
+}
+
+/* 蒙版弹层样式 */
+.mask-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 5vh 20vw;
+}
+
+.mask-modal-content {
+    background: #fff;
+    border-radius: 12px;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    box-sizing: border-box;
+    margin: auto;
+}
+
+.mask-controls {
+    position: fixed;
+    left: 50%;
+    bottom: 8vh;
+    top: auto;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    z-index: 2100;
+    gap: 18px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(6px);
+    border-radius: var(--borderRadius-main);
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+.mask-controls>button {
+    width: 4vw;
+    height: 3vw;
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: var(--borderRadius-second);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    transition: background-color 0.3s ease;
+    position: relative;
+}
+
+.mask-controls>button:hover {
+    background-color: #3d3f3d;
+}
+
+.mask-controls>button>img {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
+}
+
+.mask-controls>button.active {
+    background-color: #141515;
+    color: #fff;
+    box-shadow: 0 0 8px #1414146c;
+    border: 1px solid #2d2e30;
+}
+
+/* tooltips 在按钮左侧显示 */
+.mask-controls>button[data-tooltip]::after {
+    left: 50%;
+    right: auto;
+    top: auto;
+    bottom: 100%;
+    transform: translateX(-50%) translateY(-8px);
+    margin-right: 0;
+    margin-bottom: 8px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: var(--borderRadius-third);
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 1001;
+    pointer-events: none;
+    height: 20px;
+    padding: 6px 12px;
+    position: absolute;
+}
+
+.mask-controls>button[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-16px);
+}
+
+.mask-size-slider {
+    width: 8vw;
+    min-width: 100px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    margin: 0 0 0 0;
+}
+
+.mask-size-input {
+    width: 100%;
+    accent-color: #1976d2;
+    margin-bottom: 2px;
+}
+
+.mask-size-label {
+    color: #fff;
+    font-size: 13px;
+    text-align: center;
+    user-select: none;
+}
+
+@media screen and (max-width: 750px)  {
+    .styles-container{
+        height: 43vh ;
+    }
+    .stamps-container{
+        height: 18vh;
+    }
+    .upload-area {
+        height: 20vh;
+        flex-wrap: wrap;
+        gap: 2vw;
+    }
+    .upload-container {
+        width: 48vw;
+        height: 12vh;
+        padding: 1vh 0;
+    }
+    .button-container {
+        width: 100vw;
+        height: 8vh;
+    }
+
+    
+}

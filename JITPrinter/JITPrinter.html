@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仓储JIT匹配打单系统</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="imagePreview.js"></script>
+    <script src="printUtils.js"></script>
+    <script src="app.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="container-grid">
+            <!-- 左侧：数据预览区域 (70%) -->
+            <div class="card preview-card">
+                <div class="tab-buttons">
+                    <div class="tab-group">
+                        <button class="tab-btn active" data-tab="data">JIT生产明细</button>
+                        <button class="tab-btn" data-tab="skc">空版检货汇总</button>
+                        <button class="tab-btn" data-tab="pattern">烫画数量汇总</button>
+                    </div>
+                    <div class="button-group">
+                        <button class="button download-tab-btn" id="downloadBtn">下载当前表</button>
+                        <button class="button print-tab-btn" id="printTabBtn">打印当前表</button>
+                    </div>
+                </div>
+                <div id="summaryHeader" class="summary-header">
+                    <div>批次: <span id="batchNumber">--</span></div> |
+                    <div>款型SKC总数: <span id="styleSKCCount">0</span> </div>|
+                    <div>订单销售件数: <span id="orderQuantity">0</span> </div>|
+                    <div>印花种类: <span id="printTypeCount">0</span> </div>
+                </div>
+                <div class="tab-container">
+
+                    <div id="previewSection">
+                        <div id="dataPlaceholder" class="data-placeholder">
+                            <p>请先上传右侧需求数据</p>
+                            <p>点击"预览数据"按钮后，预览数据将显示在这里</p>
+                        </div>
+                        <div id="dataTable" class="tab-content active" data-tab="data"></div>
+                        <div id="skcSummary" class="tab-content" data-tab="skc"></div>
+                        <div id="patternSummary" class="tab-content" data-tab="pattern"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：上传控制面板 (30%) -->
+            <div class="card upload-card">
+                <div class="upload-section">
+                    <h3>上传SKU映射表</h3>
+                    <input type="file" id="mappingFile" class="file-input" accept=".xlsx,.xls,.csv">
+                    <button class="upload-btn" onclick="document.getElementById('mappingFile').click()">
+                        选择Excel/CSV格式文件
+                    </button>
+                    <div id="mappingStatus" class="status">等待上传映射表...</div>
+                    <div id="mappingError" class="error"></div>
+                </div>
+
+                <div class="upload-section">
+                    <h3>上传销售数据</h3>
+                    <input type="file" id="salesFile" class="file-input" accept=".xlsx,.xls,.csv" disabled>
+                    <button class="upload-btn" onclick="document.getElementById('salesFile').click()" id="salesBtn"
+                        disabled>
+                        选择Excel/CSV格式文件
+                    </button>
+                    <div id="salesStatus" class="status">请先上传映射表</div>
+                    <div id="salesError" class="error"></div>
+                </div>
+
+                <div class="batch-input-section">
+                    <label for="batchInput">批次:</label>
+                    <input type="text" id="batchInput" class="batch-input" required placeholder="请输入批次号">
+                </div>
+
+                <div class="no-print">
+                    <button class="preview-btn" id="previewBtn" disabled>数据预览</button>
+                    <button class="preview-btn" id="downloadDeleteBtn" disabled>备份并删除选中数据</button>
+                    <button class="preview-btn" id="copyBtn" disabled>批量复制原始款号</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+</body>
+
+</html>

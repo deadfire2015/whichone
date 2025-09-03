@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统入口</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .cards-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            width: 320px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+            border-color: #007bff;
+        }
+        
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            background-color: #f0f7ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        
+        .card-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: #007bff;
+        }
+        
+        .card h2 {
+            font-size: 24px;
+            color: #1a1a1a;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .card p {
+            font-size: 15px;
+            color: #666;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .cards-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .card {
+                width: 100%;
+                max-width: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Whichone系统工具集合</h1>
+            <p>选择您需要使用的工具</p>
+        </div>
+        
+        <div class="cards-container">
+            <!-- 印花合成助手卡片 -->
+            <div class="card" id="printAssistantCard">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zm-.5 10c0 .28-.22.5-.5.5s-.5-.22-.5-.5-.22-.5-.5-.5-.5.22-.5.5-.22.5-.5.5-.5-.22-.5-.5-.22-.5-.5-.5-.5.22-.5.5-.22.5-.5.5-.5-.22-.5-.5-.22-.5-.5-.5-.5.22-.5.5-.22.5-.5.5-.5-.22-.5-.5-.22-.5-.5-.5-.5.22-.5.5-.22.5-.5.5zm-7-6v3h-4v-4h3c.55 0 1 .45 1 1z"/>
+                    </svg>
+                </div>
+                <h2>印花合成助手</h2>
+                <p>提供印花图案合成、管理和导出功能，帮助您高效处理印花设计工作。</p>
+            </div>
+            
+            <!-- JIT仓储打印卡片 -->
+            <div class="card" id="jitPrintCard">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 10.5c0 .55-.45 1-1 1H5c-.55 0-1-.45-1-1v-6c0-.55.45-1 1-1h15c.55 0 1 .45 1 1v6zM8.5 14c0 .28.22.5.5.5h5c.28 0 .5-.22.5-.5v-4c0-.28-.22-.5-.5-.5h-5c-.28 0-.5.22-.5.5v4zM21 18H3c-.55 0-1 .45-1 1s.45 1 1 1h18c.55 0 1-.45 1-1s-.45-1-1-1z"/>
+                    </svg>
+                </div>
+                <h2>JIT仓储打印</h2>
+                <p>JIT匹配打单系统，用于仓储物流中的订单匹配和标签打印，提高仓储作业效率。</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 为卡片添加点击事件
+        document.getElementById('jitPrintCard').addEventListener('click', function() {
+            window.location.href = 'JITPrinter/JITPrinter.html';
+        });
+        
+        document.getElementById('printAssistantCard').addEventListener('click', function() {
+             window.location.href = 'PrintingAssistant/PrintingAssistant.html';
+        });
+    </script>
+</body>
+</html>

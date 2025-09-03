@@ -1,0 +1,561 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+    font-size: 16px;
+}
+
+.container {
+    margin: 0 auto;
+    width: 98vw;
+    height: 96vh;
+    padding: 2vh 1vw;
+}
+
+.container-grid {
+    display: grid;
+    grid-template-columns: 76vw 21vw;
+    gap: 1vw;
+    height: 100%;
+}
+
+.card {
+    box-sizing: border-box;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.preview-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 96vh;
+    /* border-radius: 16px; */
+    overflow: hidden;
+}
+
+#previewSection {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.upload-card {
+    padding: 12px;
+    background: #f8f9fa !important;
+}
+
+
+
+.data-placeholder {
+    text-align: center;
+    padding: 380px 20px 20px 20px;
+    color: #666;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.upload-section {
+    margin-bottom: 12px;
+    padding: 20px;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.upload-section:hover {
+    border-color: #007bff;
+}
+
+.file-input {
+    display: none;
+}
+
+.upload-btn {
+    background: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.upload-btn:hover {
+    background: #0056b3;
+}
+
+.preview-btn {
+    background: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+}
+
+.preview-btn:disabled {
+    background: #b0b7bd;
+    cursor: not-allowed;
+}
+
+.batch-input-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.batch-input-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #495057;
+}
+
+.batch-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #007bff;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.batch-input:focus {
+    outline: none;
+    border-color: #0056b3;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.print-btn {
+    background: #dc3545;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.status {
+    margin-top: 10px;
+    color: #666;
+}
+
+.error {
+    color: #dc3545;
+    margin-top: 10px;
+}
+
+.preview-section {
+    margin-top: 30px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    border: 1px solid #747474;
+    text-align: left;
+    font-size: 16px;
+    text-align: center;
+    min-width: 88px;
+}
+td.select {
+   cursor: pointer;
+}
+
+/* 扩大checkbox尺寸 */
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.fixed-summary {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #f8f9fa3c;
+    padding: 15px;
+    border-top: 2px solid #007bff;
+    z-index: 1000;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.summary {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+}
+
+.size-chip {
+    padding: 4px 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid #c6c6c6;
+}
+
+
+.size-text {
+    font-weight: bold;
+    color: #333;
+}
+
+.quantity-text {
+    color: #666;
+}
+
+/* 标题样式 */
+.main-title,
+.summary-title {
+    font-size: 24px;
+    margin: 10px 0;
+    padding: 0 4px;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.timestamp {
+    font-size: 20px;
+    color: #666;
+}
+
+.summary-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Tab切换样式 */
+.tab-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tab-buttons {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffffda;
+    backdrop-filter: blur(16px);
+    z-index: 100;
+}
+
+.summary-header {
+    display: flex;
+    box-sizing: border-box;
+    position: absolute;
+    width: 100%;
+    top: 80px; /* 位于tab-buttons下方 */
+    padding: 15px 32px;
+    background-color: #ffffffda;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 2px 10px rgba(124, 124, 124, 0.1);
+    z-index: 99;
+    font-size: 16px;
+    justify-content: space-around;
+    color: #b0b7bd;
+}
+.summary-header>div{
+    display: flex;
+    align-items: center;
+    color: #000;
+    
+}
+.summary-header>div>span{
+    margin-left: 8px;
+}
+.tab-group {
+    display: flex;
+    align-items: center;
+}
+
+.button-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 20px;
+}
+.button-group>button{
+    border-radius: 8px;
+}
+.tab-btn {
+    padding: 28px 32px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    color: #007bff;
+}
+
+.tab-btn.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+    box-shadow: 0 20px 20px -16px rgba(40, 68, 255, 0.1);
+}
+
+
+.print-tab-btn,
+.download-tab-btn {
+    height: 40px;
+    padding: 0 20px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 5px;
+    transition: all 0.3s ease;
+}
+
+.print-tab-btn:hover,
+.download-tab-btn:hover {
+    background: #218838;
+}
+
+.print-tab-btn:disabled,
+.download-tab-btn:disabled {
+    background: #b0b7bd;
+    cursor: not-allowed;
+}
+
+.tab-content {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 140px;
+    padding: 20px;
+    gap: 16px;
+    flex-direction: column;
+}
+
+.tab-content.active {
+    display: flex;
+}
+
+/* 图片单元格样式 - 让图片撑满单元格 */
+.summary-container table td:first-child {
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.summary-container table td:first-child img {
+    max-width: 120px;
+    max-height: 120px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: auto;
+}
+
+/* 鼠标悬停显示大图功能 */
+#imagePreview {
+    position: fixed;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    padding: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    display: none;
+    max-width: 500px;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+#imagePreview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* 为表格中的图片添加悬停效果 */
+#dataTable img {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#dataTable img:hover {
+    transform: scale(1.05);
+}
+
+.size-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex-direction: column;
+}
+
+.size-container>div:last-child {
+    border-bottom: none;
+}
+.no-print{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.no-print>button{
+    border-radius: 8px;
+}
+
+/* Toast提示样式 */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    left: 0;
+    right: 0;
+    margin: auto;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 300px;
+}
+
+.toast {
+    background: #6600ff;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(112, 16, 190, 0.15);
+    animation: slideIn 0.3s ease, fadeOut 0.3s ease 4.7s forwards;
+    width: 100%;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+@keyframes slideIn {
+    from {
+        filter: blur(30px);
+        transform: translate(0, -100%);
+        opacity: 0;
+    }
+    to {
+        filter: blur(0px);
+        transform: translate(-0, 0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        filter: blur(0px);
+        opacity: 1;
+    }
+    to {
+        filter: blur(30px);
+        opacity: 0;
+    }
+}
+
+/* 图片预览容器样式 - 固定500px宽度 */
+#imagePreview {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1000;
+    display: none;
+    width: 500px;
+    height: auto;
+    max-height: 500px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: white;
+    padding: 5px;
+    text-align: center;
+}
+
+#imagePreview img {
+    max-width: 100%;
+    max-height: 100%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* 表格中的图片添加悬停效果提示用户可以预览 */
+#dataTable img,
+#skcSummary img,
+#patternSummary img {
+    cursor: pointer;
+    transition: none;
+}
+
+/* 移除图片本身的悬停缩放效果，只通过预览层展示放大图片 */
+#dataTable img:hover,
+#skcSummary img:hover,
+#patternSummary img:hover {
+    transform: none;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        padding: 0;
+        margin: 0;
+    }
+
+    .container {
+        box-shadow: none;
+        border: none;
+        padding: 1vh 1vw;
+        width: 100%;
+    }
+
+    table {
+        page-break-inside: auto;
+    }
+
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+}

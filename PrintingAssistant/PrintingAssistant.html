@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>印花图片上传</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.11/dist/interact.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:,">  <!-- 空图标 -->
+</head>
+
+<body>
+    <!-- 预览区域 -->
+    <div class="layout-container">
+        <div id="stamp-position-display" class="stamp-position-display">❣️ 温馨提示: 1.上传款式图片; 2.上传印花图片; 3.调整印花大小位置;
+            4.点击合成按钮.(缓存只会保存一个款型图片的印花参数)</div>
+        <!-- 款式图片预览 -->
+        <div class="preview-section">
+            <button id="clearAllStyles" class="clear-all-btn" title="删除全部款式图片">×删除全部</button>
+            <div id="stylePreview" class="styles-container"></div>
+        </div>
+        <!-- 印花图片预览 -->
+        <div class="preview-section">
+            <button id="clearAllStamps" class="clear-all-btn" title="删除全部印花图片">×删除全部</button>
+            <div id="stampPreview" class="stamps-container"></div>
+        </div>
+    </div>
+    <!-- 上传区域 -->
+    <div class="upload-area">
+        <div class="upload-container">
+            <p class="upload-title"><img src="imgs/shirt.svg" class="iconsBig"> <span>款式图片</span></p>
+            <span>点击/拖拽上传</span>
+            <input type="file" id="styleUpload" class="upload-input" accept="image/*" multiple>
+        </div>
+        <div class="upload-container">
+            <p class="upload-title"><img src="imgs/print.svg" class="iconsBig"> <span>印花图片</span></p>
+            <span>点击/拖拽上传</span>
+            <input type="file" id="stampUpload" class="upload-input" accept="image/*" multiple>
+        </div>
+        <div class="button-container">
+            <button type="button" id="mixbutton" value="⚡合成" class="mix"> <img src="imgs/download.svg" class="iconslarge"> <span>合成</span> </button>
+        </div>
+    </div>
+    <script type="module" src="app.js"></script>
+    <!-- 下载遮罩层 -->
+    <div class="download-overlay">
+        <div class="download-progress">
+            <div class="progress-bar"></div>
+            <div class="progress-text">下载中...</div>
+        </div>
+    </div>
+</body>
+
+</html>
