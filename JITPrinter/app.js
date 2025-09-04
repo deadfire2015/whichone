@@ -201,13 +201,77 @@ if (!window.JITOrderSystem) {
                 }
                 
                 this.validateSalesData(data);
-                this.salesData = data;
+                
+                // 检查销售数量为0的数据
+                const zeroQuantitySkus = [];
+                data.forEach(row => {
+                    const sku = row[this.fieldNames.sales.sku]?.toString().trim();
+                    const quantity = parseInt(row[this.fieldNames.sales.quantity]) || 0;
+                    if (quantity === 0 && sku) {
+                        zeroQuantitySkus.push(sku);
+                    }
+                });
+                
+                // 如果存在销售数量为0的数据，显示提示
+                if (zeroQuantitySkus.length > 0) {
+                    // 使用红色样式显示警告信息
+                    $status.text(`解析 ${data.length} 条数据成功！\n但存在销量为0的数据`).css('color', '#dc3545').css('font-weight', '500').css('white-space', 'pre-line');
+                    
+                    // 构建错误信息，每个SKU单独占一行显示
+                    const displaySkus = zeroQuantitySkus.slice(0, 10);
+                    const moreSkusCount = zeroQuantitySkus.length - displaySkus.length;
+                    let errorMessage =  displaySkus.join('\n');
+                    if (moreSkusCount > 0) {
+                        errorMessage += `\n...等${moreSkusCount}个SKU`;
+                    }
+                    
+                    // 显示错误信息
+                    $error.text(errorMessage);
+                    
+                    this.salesData = data;
+                    
+                    // 存在销量为0的SKU，不启用预览按钮
+                    $('#previewBtn').prop('disabled', true);
+                    
+                    // 创建或显示复制按钮
+                    let $copyZeroSkuBtn = $('#copyZeroSkuBtn');
+                    if ($copyZeroSkuBtn.length === 0) {
+                        $copyZeroSkuBtn = $('<button>').attr('id', 'copyZeroSkuBtn')
+                            .text('复制销量为0的SKU')
+                            .addClass('preview-btn')
+                            
+                        // 将按钮放在salesError的前面，避免被遮挡
+                        $('#salesError').after($copyZeroSkuBtn);
+                    } else {
+                        $copyZeroSkuBtn.show();
+                    }
+                    
+                    // 添加点击事件复制所有销量为0的SKU
+                    $copyZeroSkuBtn.off('click').on('click', () => {
+                        const allZeroSkus = zeroQuantitySkus.join('\n');
+                        navigator.clipboard.writeText(allZeroSkus).then(() => {
+                            // 显示复制成功提示
+                            const $toast = $('<div>').addClass('toast')
+                                .text('复制成功');
+                            $('#toastContainer').append($toast);
+                            setTimeout(() => {
+                                $toast.remove();
+                            }, 2000);
+                        });
+                    });
+                } else {
+                    $status.text(`解析 ${data.length} 条数据成功！`).addClass('status-success');
+                    
+                    this.salesData = data;
 
-                $status.text(`解析 ${data.length} 条数据成功！`).addClass('status-success');
-                // 保持成功状态显示，不再自动移除
+                    // 保持成功状态显示，不再自动移除
 
-                // 启用预览按钮
-                $('#previewBtn').prop('disabled', false);
+                    // 启用预览按钮
+                    $('#previewBtn').prop('disabled', false);
+                    
+                    // 隐藏复制按钮
+                    $('#copyZeroSkuBtn').hide();
+                }
 
             } catch (err) {
                 $error.text(`销售表解析错误: ${err?.message || '未知错误'}`);

@@ -82,7 +82,7 @@ li {
 .upload-section {
     position: relative;
     margin-bottom: 12px;
-    padding: 10px;
+    padding: 16px 12px;
     border: 2px dashed #ccc;
     border-radius: 8px;
     text-align: center;
@@ -124,15 +124,21 @@ li {
     color: white;
     padding: 10px 20px;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 16px;
     width: 100%;
+    position: relative;
+    z-index: 10;
+    transition: all 0.3s ease;
 }
 
 .preview-btn:disabled {
     background: #b0b7bd;
     cursor: not-allowed;
+}
+.preview-btn:hover {
+    box-shadow: 0 4px 10px rgba(33, 136, 56, 0.5);
 }
 
 .batch-input-section {
@@ -198,6 +204,19 @@ li {
 .status-success::before {
     content: '✓';
     color: #28a745;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.status-warning {
+    color: #ffc107;
+    font-weight: 500;
+    white-space: pre-line;
+}
+
+.status-warning::before {
+    content: '⚠';
+    color: #ffc107;
     font-weight: bold;
     margin-right: 8px;
 }
@@ -518,53 +537,40 @@ tr:nth-child(even) {
 .toast-container {
     position: fixed;
     top: 20px;
-    left: 0;
-    right: 0;
-    margin: auto;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 300px;
+    right: 20px;
+    z-index: 1000;
 }
 
 .toast {
-    background: #6600ff;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(112, 16, 190, 0.15);
-    animation: slideIn 0.3s ease, fadeOut 0.3s ease 4.7s forwards;
-    width: 100%;
-    text-align: center;
-    word-wrap: break-word;
-}
+     background-color: #9000e9;
+     color: white;
+     padding: 12px 20px;
+     border-radius: 8px;
+     margin-bottom: 10px;
+     box-shadow: 0 2px 24px rgba(107, 0, 221, 0.2);
+     animation: slideIn 0.3s ease-out backwards, slideOut 0.3s ease-in forwards 2s;
+  }
+  
+  @keyframes slideOut {
+     from {
+         transform: translateX(0);
+         opacity: 1;
+     }
+     to {
+         transform: translateX(100%);
+         opacity: 0;
+     }
+  }
 
 @keyframes slideIn {
     from {
-        filter: blur(30px);
-        transform: translate(0, -100%);
+        transform: translateX(100%);
         opacity: 0;
     }
 
     to {
-        filter: blur(0px);
-        transform: translate(-0, 0);
+        transform: translateX(0);
         opacity: 1;
-    }
-}
-
-@keyframes fadeOut {
-    from {
-        filter: blur(0px);
-        opacity: 1;
-    }
-
-    to {
-        filter: blur(30px);
-        opacity: 0;
     }
 }
 
