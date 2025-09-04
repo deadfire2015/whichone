@@ -5,9 +5,12 @@ body {
     background-color: #f5f5f5;
     font-size: 16px;
 }
-ul,li{ 
+
+ul,
+li {
     list-style: none;
 }
+
 .container {
     margin: 0 auto;
     width: 98vw;
@@ -65,11 +68,13 @@ ul,li{
     color: #666;
     width: 100%;
 }
+
 .data-placeholder li {
     height: 32px;
     line-height: 32px;
-    
+
 }
+
 .hidden {
     display: none !important;
 }
@@ -106,8 +111,8 @@ ul,li{
     cursor: pointer;
     font-size: 16px;
     opacity: 0;
-    
-    
+
+
 }
 
 .upload-btn:hover {
@@ -147,10 +152,12 @@ ul,li{
     color: #495057;
     min-width: 50px;
 }
-.batch-input-section input { 
+
+.batch-input-section input {
     border-radius: 8px;
     transition: all 0.2s ease-in-out;
 }
+
 .batch-input {
     width: 100%;
     padding: 10px 12px;
@@ -185,6 +192,7 @@ ul,li{
 .status-success {
     color: #28a745;
     font-weight: 500;
+    white-space: pre-line;
 }
 
 .status-success::before {
@@ -195,8 +203,18 @@ ul,li{
 }
 
 .error {
+    font-size: 14px;
     color: #dc3545;
     margin-top: 10px;
+}
+
+.upload-hint {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 8px;
+    line-height: 1.4;
+    padding: 0 10px;
+    text-align: center;
 }
 
 .preview-section {
@@ -216,8 +234,9 @@ td {
     text-align: center;
     min-width: 88px;
 }
+
 td.select {
-   cursor: pointer;
+    cursor: pointer;
 }
 
 /* 扩大checkbox尺寸 */
@@ -326,7 +345,8 @@ tr:nth-child(even) {
     box-sizing: border-box;
     position: absolute;
     width: 100%;
-    top: 80px; /* 位于tab-buttons下方 */
+    top: 80px;
+    /* 位于tab-buttons下方 */
     padding: 15px 32px;
     background-color: #ffffffda;
     backdrop-filter: blur(16px);
@@ -336,15 +356,18 @@ tr:nth-child(even) {
     justify-content: space-around;
     color: #b0b7bd;
 }
-.summary-header>div{
+
+.summary-header>div {
     display: flex;
     align-items: center;
     color: #000;
-    
+
 }
-.summary-header>div>span{
+
+.summary-header>div>span {
     margin-left: 8px;
 }
+
 .tab-group {
     display: flex;
     align-items: center;
@@ -356,9 +379,11 @@ tr:nth-child(even) {
     gap: 10px;
     padding: 20px 20px;
 }
-.button-group>button{
+
+.button-group>button {
     border-radius: 8px;
 }
+
 .tab-btn {
     padding: 28px 32px;
     background: none;
@@ -478,12 +503,14 @@ tr:nth-child(even) {
     border-bottom: none;
     margin-bottom: 0;
 }
-.no-print{
+
+.no-print {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
-.no-print>button{
+
+.no-print>button {
     border-radius: 8px;
 }
 
@@ -521,6 +548,7 @@ tr:nth-child(even) {
         transform: translate(0, -100%);
         opacity: 0;
     }
+
     to {
         filter: blur(0px);
         transform: translate(-0, 0);
@@ -533,6 +561,7 @@ tr:nth-child(even) {
         filter: blur(0px);
         opacity: 1;
     }
+
     to {
         filter: blur(30px);
         opacity: 0;
@@ -561,6 +590,18 @@ tr:nth-child(even) {
     max-height: 100%;
     display: inline-block;
     vertical-align: middle;
+}
+
+/* 合并单元格样式 */
+.merged-cell {
+    vertical-align: middle !important;
+    background-color: #f0f7ff;
+    font-weight: bold;
+}
+
+.hidden-cell {
+    display: none;
+    border: none;
 }
 
 /* 表格中的图片添加悬停效果提示用户可以预览 */

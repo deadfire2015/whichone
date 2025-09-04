@@ -49,20 +49,11 @@ if (!window.JITOrderSystem) {
         }
 
         initializeEventListeners() {
-            // 映射表文件上传
-            $('#mappingFile').on('change', (e) => {
-                this.handleMappingFile(e.target.files[0]);
-            });
-
-            // SKC印花映射表文件上传
-            $('#skcMappingFile').on('change', (e) => {
-                this.handleSkcMappingFile(e.target.files[0]);
-            });
-
-            // 印花图片映射表文件上传
-            $('#patternImageFile').on('change', (e) => {
-                this.handlePatternImageFile(e.target.files[0]);
-            });
+            // 初始化MappingUploader
+            if (window.MappingUploader) {
+                this.mappingUploader = new window.MappingUploader(this);
+                this.mappingUploader.init();
+            }
 
             // 销售表文件上传
             $('#salesFile').on('change', (e) => {
@@ -93,7 +84,7 @@ if (!window.JITOrderSystem) {
             $('#batchInput').on('input', () => {
                 const hasBatch = !!$('#batchInput').val().trim();
                 $('#previewBtn').prop('disabled', !hasBatch);
-                $('#downloadEmptySheetBtn').prop('disabled', !hasBatch);
+                // downloadEmptySheetBtn按钮现在只在表单生成后才可用
             });
         }
 
@@ -185,24 +176,46 @@ if (!window.JITOrderSystem) {
             $error.text('');
 
             try {
-                const data = await this.readExcelFile(file);
+                let data;
+                
+                // 首先尝试读取指定的工作表
+                try {
+                    data = await this.readExcelFile(file, '销售表');
+                } catch (err) {
+                    // 如果指定工作表不存在，尝试获取第一个工作表
+                    const workbookData = await this.readExcelFile(file);
+                    
+                    // 检查是否返回的是包含所有工作表的对象
+                    if (typeof workbookData === 'object' && !Array.isArray(workbookData)) {
+                        const sheetNames = Object.keys(workbookData);
+                        if (sheetNames.length > 0) {
+                            // 使用第一个工作表的数据
+                            data = workbookData[sheetNames[0]];
+                        } else {
+                            throw new Error('Excel文件中没有找到任何工作表');
+                        }
+                    } else {
+                        // 如果返回的已经是数组，则直接使用
+                        data = workbookData;
+                    }
+                }
+                
                 this.validateSalesData(data);
                 this.salesData = data;
 
                 $status.text(`解析 ${data.length} 条数据成功！`).addClass('status-success');
                 // 保持成功状态显示，不再自动移除
 
-                // 启用预览按钮和下载空版组单表按钮
-        $('#previewBtn').prop('disabled', false);
-        $('#downloadEmptySheetBtn').prop('disabled', false);
+                // 启用预览按钮
+                $('#previewBtn').prop('disabled', false);
 
             } catch (err) {
-                $error.text(`销售表解析错误: ${err.message}`);
+                $error.text(`销售表解析错误: ${err?.message || '未知错误'}`);
                 $status.text('销售表解析失败');
             }
         }
 
-        async readExcelFile(file) {
+        async readExcelFile(file, sheetName = null) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
 
@@ -220,14 +233,26 @@ if (!window.JITOrderSystem) {
                             const data = new Uint8Array(e.target.result);
                             const workbook = XLSX.read(data, { type: 'array' });
 
-                            // 获取第一个工作表
-                            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-
-                            resolve(jsonData);
+                            if (sheetName) {
+                                // 读取指定的工作表
+                                if (!workbook.SheetNames.includes(sheetName)) {
+                                    reject(new Error(`Excel文件中不存在名为'${sheetName}'的工作表`));
+                                    return;
+                                }
+                                const worksheet = workbook.Sheets[sheetName];
+                                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                                resolve(jsonData);
+                            } else {
+                                // 读取所有工作表
+                                const allSheets = {};
+                                workbook.SheetNames.forEach(name => {
+                                    allSheets[name] = XLSX.utils.sheet_to_json(workbook.Sheets[name]);
+                                });
+                                resolve(allSheets);
+                            }
                         }
                     } catch (err) {
-                        reject(new Error('文件解析失败'));
+                        reject(new Error('文件解析失败: ' + err.message));
                     }
                 };
 
@@ -495,6 +520,11 @@ if (!window.JITOrderSystem) {
             return summary;
         }
 
+        /**
+         * 获取指定SKC的尺码信息
+         * @param {string} skc - SKC编码
+         * @returns {Array} 尺码信息数组，每个元素包含size和quantity
+         */
         getSizesForSkc(skc) {
             const sizeQuantities = {};
             this.processedData.forEach(item => {
@@ -503,12 +533,11 @@ if (!window.JITOrderSystem) {
                 }
             });
 
-            let result = '<div class="size-container">';
-            Object.entries(sizeQuantities).forEach(([size, quantity]) => {
-                result += `<div class="size-chip"><span class="size-text">${size}</span>:<span class="quantity-text">${quantity}</span></div>`;
-            });
-            result += '</div>';
-            return result;
+            // 返回尺码数组而不是HTML字符串
+            return Object.entries(sizeQuantities).map(([size, quantity]) => ({
+                size: size,
+                quantity: quantity
+            }));
         }
 
         getAdultQuantityForPattern(pattern) {
@@ -554,7 +583,7 @@ if (!window.JITOrderSystem) {
                 $('#dataTable, #skcSummary, #patternSummary').removeClass('hidden');
 
                 // 启用下载和打印按钮
-                $('#downloadBtn, #printTabBtn, #downloadDeleteBtn, #copyBtn').prop('disabled', false);
+                $('#downloadBtn, #printTabBtn, #downloadDeleteBtn, #copyBtn, #downloadEmptySheetBtn').prop('disabled', false);
 
                 // 为所有表格添加图片预览功能
                 if (window.imagePreviewManager) {
@@ -603,19 +632,71 @@ if (!window.JITOrderSystem) {
                 <tbody>
         `;
 
-            data.forEach(item => {
-                html += `
-                <tr>
-                    <td class="select"><input type="checkbox" class="row-checkbox" data-skc="${this.escapeHtml(item.skc)}" data-pattern="${this.escapeHtml(item.pattern)}" data-size="${this.escapeHtml(item.size)}"></td>
-                    <td>${item.imageUrl ? `<img src="${this.escapeHtml(item.imageUrl)}" height="${this.displayConfig.imageMaxHeight}" onerror="this.style.display='none'">` : '无'}</td>
-                    <td>${this.escapeHtml(item.skc)}</td>
-                    <td>${this.escapeHtml(item.pattern)}</td>
-                    <td>${this.escapeHtml(item.size)}</td>
-                    <td>${item.quantity}</td>
-                    <td>${this.escapeHtml(item.originalSku)}</td>
-                </tr>
-            `;
-            });
+            if (data.length > 0) {
+                // 创建组数组，确保只有SKC和印花编码都相同的行才会在同一组
+                const groups = [];
+                let currentGroup = [data[0]];
+                
+                for (let i = 1; i < data.length; i++) {
+                    const currentItem = data[i];
+                    const lastInGroup = currentGroup[currentGroup.length - 1];
+                    
+                    // 只有当SKC和印花编码都相同时，才将当前行添加到同一组
+                    if (currentItem.skc === lastInGroup.skc && currentItem.pattern === lastInGroup.pattern) {
+                        currentGroup.push(currentItem);
+                    } else {
+                        // 否则，创建新组
+                        groups.push(currentGroup);
+                        currentGroup = [currentItem];
+                    }
+                }
+                // 添加最后一组
+                groups.push(currentGroup);
+
+                // 遍历每个组生成HTML
+                groups.forEach(group => {
+                    const groupLength = group.length;
+                    
+                    group.forEach((item, index) => {
+                        const isFirstInGroup = index === 0;
+                        
+                        html += `
+                        <tr>
+                        `;
+
+                        // Checkbox列 - 只在组的第一行显示，其他行隐藏
+                        if (isFirstInGroup) {
+                            // 获取该组所有行的数据属性，用于批量操作
+                            const groupDataAttributes = group.map(g => 
+                                `data-skc="${this.escapeHtml(g.skc)}" data-pattern="${this.escapeHtml(g.pattern)}" data-size="${this.escapeHtml(g.size)}"`
+                            ).join(' ');
+                            
+                            html += `
+                                <td class="select" rowspan="${groupLength}"><input type="checkbox" class="row-checkbox group-checkbox" ${groupDataAttributes}></td>
+                                <td rowspan="${groupLength}" class="merged-cell">${item.imageUrl ? `<img src="${this.escapeHtml(item.imageUrl)}" height="${this.displayConfig.imageMaxHeight}" onerror="this.style.display='none'">` : '无'}</td>
+                                <td rowspan="${groupLength}" class="merged-cell">${this.escapeHtml(item.skc)}</td>
+                                <td rowspan="${groupLength}" class="merged-cell">${this.escapeHtml(item.pattern)}</td>
+                                <td>${this.escapeHtml(item.size)}</td>
+                                <td>${item.quantity}</td>
+                                <td>${this.escapeHtml(item.originalSku)}</td>
+                            `;
+                        } else {
+                            // 隐藏重复的列
+                            html += `
+                                <td class="hidden-cell"></td>
+                                <td class="hidden-cell"></td>
+                                <td class="hidden-cell"></td>
+                                <td class="hidden-cell"></td>
+                                <td>${this.escapeHtml(item.size)}</td>
+                                <td>${item.quantity}</td>
+                                <td>${this.escapeHtml(item.originalSku)}</td>
+                            `;
+                        }
+
+                        html += `</tr>`;
+                    });
+                });
+            }
 
             html += `
                 </tbody>
@@ -673,6 +754,43 @@ if (!window.JITOrderSystem) {
                     $checkbox.trigger('change');
                 }
             });
+
+            // 为组复选框添加特殊处理
+            $('.group-checkbox').each((index, checkbox) => {
+                const $checkbox = $(checkbox);
+                // 获取该组所有行的数据属性
+                const groupData = [];
+                const dataset = $checkbox[0].dataset;
+                
+                // 提取所有data-*属性并构建组数据
+                Object.keys(dataset).forEach(key => {
+                    if (key.startsWith('skc')) {
+                        const idx = key.replace('skc', '');
+                        if (idx === '' || !isNaN(idx)) {
+                            const realIdx = idx === '' ? 0 : parseInt(idx) - 1;
+                            if (!groupData[realIdx]) groupData[realIdx] = {};
+                            groupData[realIdx].skc = dataset[key];
+                        }
+                    } else if (key.startsWith('pattern')) {
+                        const idx = key.replace('pattern', '');
+                        if (idx === '' || !isNaN(idx)) {
+                            const realIdx = idx === '' ? 0 : parseInt(idx) - 1;
+                            if (!groupData[realIdx]) groupData[realIdx] = {};
+                            groupData[realIdx].pattern = dataset[key];
+                        }
+                    } else if (key.startsWith('size')) {
+                        const idx = key.replace('size', '');
+                        if (idx === '' || !isNaN(idx)) {
+                            const realIdx = idx === '' ? 0 : parseInt(idx) - 1;
+                            if (!groupData[realIdx]) groupData[realIdx] = {};
+                            groupData[realIdx].size = dataset[key];
+                        }
+                    }
+                });
+                
+                // 存储组数据到checkbox元素
+                $checkbox.data('groupData', groupData);
+            });
         }
 
 
@@ -687,17 +805,72 @@ if (!window.JITOrderSystem) {
 
             // 获取选中数据
             const selectedData = [];
+            // 创建一个集合，存储需要收集的SKC和印花编码组合
+            const skcPatternToCollect = new Set();
+            
             checkboxes.forEach(checkbox => {
-                const row = checkbox.closest('tr');
-                if (row) {
-                    const cells = row.querySelectorAll('td');
+                const $checkbox = $(checkbox);
+                
+                // 检查是否为组复选框且有组数据
+                if (checkbox.classList.contains('group-checkbox') && $checkbox.data('groupData')) {
+                    const groupData = $checkbox.data('groupData');
+                    // 将组内所有SKC和印花编码组合加入集合
+                    groupData.forEach(itemData => {
+                        skcPatternToCollect.add(`${itemData.skc}|${itemData.pattern}`);
+                    });
+                } else {
+                    // 处理普通行
+                    const row = checkbox.closest('tr');
+                    if (row) {
+                        // 找到可见的单元格
+                        let visibleCells = Array.from(row.querySelectorAll('td')).filter(cell => 
+                            !cell.classList.contains('hidden-cell')
+                        );
+                        
+                        // 如果当前行是合并组中的非首行，找到对应的首行
+                        if (visibleCells.length < 7) {
+                            const rowIndex = Array.from(row.parentNode.children).indexOf(row);
+                            let firstRow = row;
+                            
+                            // 向上查找直到找到首行
+                            for (let i = rowIndex - 1; i >= 0; i--) {
+                                const prevRow = row.parentNode.children[i];
+                                const prevVisibleCells = Array.from(prevRow.querySelectorAll('td')).filter(cell => 
+                                    !cell.classList.contains('hidden-cell')
+                                );
+                                if (prevVisibleCells.length === 7) {
+                                    firstRow = prevRow;
+                                    break;
+                                }
+                            }
+                            
+                            // 从首行获取SKC和印花编码
+                            const firstVisibleCells = Array.from(firstRow.querySelectorAll('td')).filter(cell => 
+                                !cell.classList.contains('hidden-cell')
+                            );
+                            const skc = firstVisibleCells[2].textContent.trim();
+                            const pattern = firstVisibleCells[3].textContent.trim();
+                            skcPatternToCollect.add(`${skc}|${pattern}`);
+                        } else {
+                            // 普通行处理
+                            const skc = visibleCells[2].textContent.trim();
+                            const pattern = visibleCells[3].textContent.trim();
+                            skcPatternToCollect.add(`${skc}|${pattern}`);
+                        }
+                    }
+                }
+            });
+            
+            // 根据收集的SKC和印花编码组合，从processedData中获取所有匹配的数据
+            this.processedData.forEach(item => {
+                if (skcPatternToCollect.has(`${item.skc}|${item.pattern}`)) {
                     selectedData.push({
-                        imageUrl: cells[1].querySelector('img')?.src || '',
-                        skc: cells[2].textContent,
-                        pattern: cells[3].textContent,
-                        size: cells[4].textContent,
-                        quantity: parseInt(cells[5].textContent),
-                        originalSku: cells[6].textContent
+                        imageUrl: item.imageUrl || '',
+                        skc: item.skc,
+                        pattern: item.pattern,
+                        size: item.size,
+                        quantity: item.quantity || 0,
+                        originalSku: item.originalSku
                     });
                 }
             });
@@ -760,35 +933,98 @@ if (!window.JITOrderSystem) {
                 return;
             }
 
-            // 获取选中数据的原始SKU和销售数量
-            const barcodeData = [];
+            // 首先收集所有选中的SKC和印花编码组合
+            const skcPatternToCollect = new Set();
             checkboxes.forEach(checkbox => {
-                const row = checkbox.closest('tr');
-                if (row) {
-                    const cells = row.querySelectorAll('td');
-                    // 原始SKU在第7列，销售数量在第6列（基于表格结构）
-                    const originalSku = cells[6].textContent.trim();
-                    const quantity = cells[5].textContent.trim(); // 修复：使用第6列的销售数量
-                    
-                    barcodeData.push({
-                        '商品编码': originalSku,
-                        '数量': quantity
+                const $checkbox = $(checkbox);
+                
+                // 检查是否为组复选框且有组数据
+                if (checkbox.classList.contains('group-checkbox') && $checkbox.data('groupData')) {
+                    const groupData = $checkbox.data('groupData');
+                    // 将组内所有SKC和印花编码组合加入集合
+                    groupData.forEach(itemData => {
+                        skcPatternToCollect.add(`${itemData.skc}|${itemData.pattern}`);
+                    });
+                } else {
+                    // 处理普通行
+                    const row = checkbox.closest('tr');
+                    if (row) {
+                        // 找到可见的单元格
+                        let visibleCells = Array.from(row.querySelectorAll('td')).filter(cell => 
+                            !cell.classList.contains('hidden-cell')
+                        );
+                        
+                        // 如果当前行是合并组中的非首行，找到对应的首行
+                        if (visibleCells.length < 7) {
+                            const rowIndex = Array.from(row.parentNode.children).indexOf(row);
+                            let firstRow = row;
+                            
+                            // 向上查找直到找到首行
+                            for (let i = rowIndex - 1; i >= 0; i--) {
+                                const prevRow = row.parentNode.children[i];
+                                const prevVisibleCells = Array.from(prevRow.querySelectorAll('td')).filter(cell => 
+                                    !cell.classList.contains('hidden-cell')
+                                );
+                                if (prevVisibleCells.length === 7) {
+                                    firstRow = prevRow;
+                                    break;
+                                }
+                            }
+                            
+                            // 从首行获取SKC和印花编码
+                            const firstVisibleCells = Array.from(firstRow.querySelectorAll('td')).filter(cell => 
+                                !cell.classList.contains('hidden-cell')
+                            );
+                            const skc = firstVisibleCells[2].textContent.trim();
+                            const pattern = firstVisibleCells[3].textContent.trim();
+                            skcPatternToCollect.add(`${skc}|${pattern}`);
+                        } else {
+                            // 普通行处理
+                            const skc = visibleCells[2].textContent.trim();
+                            const pattern = visibleCells[3].textContent.trim();
+                            skcPatternToCollect.add(`${skc}|${pattern}`);
+                        }
+                    }
+                }
+            });
+
+            // 根据SKC和印花编码组合分组收集条码数据
+            const skcPatternGroups = new Map();
+            this.processedData.forEach(item => {
+                const skcPatternKey = `${item.skc}|${item.pattern}`;
+                if (skcPatternToCollect.has(skcPatternKey)) {
+                    if (!skcPatternGroups.has(skcPatternKey)) {
+                        skcPatternGroups.set(skcPatternKey, []);
+                    }
+                    skcPatternGroups.get(skcPatternKey).push({
+                        '商品编码': item.originalSku,
+                        '数量': item.quantity || 0
                     });
                 }
             });
 
-            // 创建新数组，在每8行数据后添加sticker行
+            // 创建最终数据数组，每8个SKC后添加sticker行
             const finalData = [];
-            for (let i = 0; i < barcodeData.length; i++) {
-                finalData.push(barcodeData[i]);
-                // 每8行后添加sticker行，但不要在最后一行后添加
-                if ((i + 1) % 8 === 0 && (i + 1) < barcodeData.length) {
+            let skcCount = 0;
+            
+            // 遍历每个SKC组
+            skcPatternGroups.forEach((skuItems, skcPatternKey) => {
+                // 添加当前SKC组的所有条码数据
+                skuItems.forEach(skuItem => {
+                    finalData.push(skuItem);
+                });
+                
+                // 增加SKC计数
+                skcCount++;
+                
+                // 每8个SKC后添加sticker行，但不在最后一个SKC后添加
+                if (skcCount % 8 === 0 && skcCount < skcPatternGroups.size) {
                     finalData.push({
                         '商品编码': 'sticker',
                         '数量': '2'
                     });
                 }
-            }
+            });
 
             // 创建工作簿
             const wb = XLSX.utils.book_new();
@@ -879,13 +1115,15 @@ if (!window.JITOrderSystem) {
 
         removeSelectedDataFromProcessed(selectedData) {
             // 从processedData中删除选中数据
+            // 首先创建一个集合，存储所有需要删除的SKC和印花编码的组合
+            const skcPatternToRemove = new Set();
+            selectedData.forEach(selectedItem => {
+                skcPatternToRemove.add(`${selectedItem.skc}|${selectedItem.pattern}`);
+            });
+            
+            // 过滤掉所有在需要删除集合中的SKC和印花编码组合的数据
             this.processedData = this.processedData.filter(processedItem => {
-                return !selectedData.some(selectedItem =>
-                    processedItem.skc === selectedItem.skc &&
-                    processedItem.pattern === selectedItem.pattern &&
-                    processedItem.size === selectedItem.size &&
-                    processedItem.quantity === selectedItem.quantity
-                );
+                return !skcPatternToRemove.has(`${processedItem.skc}|${processedItem.pattern}`);
             });
         }
 
@@ -926,7 +1164,8 @@ if (!window.JITOrderSystem) {
                                 <tr>
                                     <th>款式图片</th>
                                     <th>款号skc</th>
-                                    <th>检货尺码(件)</th>
+                                    <th>尺码</th>
+                                    <th>数量</th>
                                     <th>件数合计</th>
                                 </tr>
                             </thead>
@@ -939,17 +1178,46 @@ if (!window.JITOrderSystem) {
                 }
             });
 
+            // 按SKC分组处理
+            const skcGroups = {};
             Object.entries(summary.skcSummary)
                 .sort(([, a], [, b]) => b - a)
-                .forEach(([skc, quantity]) => {
-                    const imageUrl = skcImages[skc] || '';
-                    skcHtml += `<tr>
-                    <td>${imageUrl ? `<img src="${this.escapeHtml(imageUrl)}" height="${this.displayConfig.imageMaxHeight}" onerror="this.style.display='none'">` : '无'}</td>
-                    <td>${this.escapeHtml(skc)}</td>
-                    <td>${this.getSizesForSkc(skc)}</td>
-                    <td>${quantity}</td>
-                </tr>`;
+                .forEach(([skc, totalQuantity]) => {
+                    skcGroups[skc] = {
+                        imageUrl: skcImages[skc] || '',
+                        sizes: this.getSizesForSkc(skc),
+                        totalQuantity: totalQuantity
+                    };
                 });
+
+            // 生成表格内容，实现SKC相同单元格合并
+            Object.entries(skcGroups).forEach(([skc, group]) => {
+                const sizeCount = group.sizes.length;
+                
+                // 第一行显示图片、SKC和合计数量，这些单元格需要合并
+                skcHtml += `<tr>
+                    <td rowspan="${sizeCount}" ${sizeCount > 1 ? 'class="merged-cell"' : ''}>
+                        ${group.imageUrl ? `<img src="${this.escapeHtml(group.imageUrl)}" height="${this.displayConfig.imageMaxHeight}" onerror="this.style.display='none'">` : '无'}
+                    </td>
+                    <td rowspan="${sizeCount}" ${sizeCount > 1 ? 'class="merged-cell"' : ''}>${this.escapeHtml(skc)}</td>`;
+                
+                // 第一行的尺码和数量
+                const firstSize = group.sizes[0];
+                skcHtml += `
+                    <td>${this.escapeHtml(firstSize.size)}</td>
+                    <td>${firstSize.quantity}</td>
+                    <td rowspan="${sizeCount}" ${sizeCount > 1 ? 'class="merged-cell"' : ''}>${group.totalQuantity}</td>
+                </tr>`;
+                
+                // 后续行只显示尺码和数量
+                for (let i = 1; i < sizeCount; i++) {
+                    const size = group.sizes[i];
+                    skcHtml += `<tr>
+                        <td>${this.escapeHtml(size.size)}</td>
+                        <td>${size.quantity}</td>
+                    </tr>`;
+                }
+            });
 
             skcHtml += `</tbody></table></div>
         </div>`;
@@ -1097,8 +1365,6 @@ function setupTabs() {
     });
 }
 
-
-
 // 下载当前选中的表格
 function setupDownloadButton() {
     const $downloadBtn = $('#downloadBtn');
@@ -1118,256 +1384,165 @@ function setupDownloadButton() {
     });
 }
 
-// 使用ExcelJS下载带图片的表格
-async function downloadWithImages($activeTab, tabTitle, timestamp) {
-    try {
-        // 创建ExcelJS工作簿
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet(tabTitle);
-        
-        const $table = $activeTab.find('table');
-        
-        // 记录哪些列包含图片
-        const imageColumns = [];
-        const imageColumnMap = new Map(); // 存储单元格位置到图片的映射
-        
-        // 添加表头
-        const headers = [];
-        $table.find('thead th').each(function(index) {
-            const headerText = $(this).text().trim();
-            headers.push(headerText);
-            
-            // 设置表头单元格样式
-            const cell = worksheet.getCell(1, index + 1);
-            cell.value = headerText;
-            cell.font = { bold: true };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-            cell.border = getBorder();
-        });
-        
-        // 调整列宽
-        for (let i = 1; i <= headers.length; i++) {
-            worksheet.getColumn(i).width = 15; // 默认列宽
-        }
-        
-        // 添加数据行
-        let rowIndex = 2;
-        const imagePromises = [];
-        
-        $table.find('tbody tr').each(function(rowNum) {
-            $(this).find('td').each(function(cellIndex) {
-                const cell = worksheet.getCell(rowIndex, cellIndex + 1);
-                
-                // 处理复选框单元格
-                if ($(this).find('input[type="checkbox"]').length) {
-                    cell.value = ''; // 忽略复选框
-                }
-                // 处理图片单元格
-                else if ($(this).find('img').length) {
-                    const img = $(this).find('img');
-                    const imgSrc = img.attr('src');
-                    
-                    if (imgSrc) {
-                        // 记录包含图片的列
-                        if (!imageColumns.includes(cellIndex)) {
-                            imageColumns.push(cellIndex);
-                            worksheet.getColumn(cellIndex + 1).width = 20; // 为图片列设置更大的宽度
-                        }
-                        
-                        // 添加图片加载承诺
-                        const imagePromise = loadImageAsBase64(imgSrc).then(base64 => {
-                            if (base64) {
-                                // 存储图片位置映射，稍后处理
-                                imageColumnMap.set(`${rowIndex},${cellIndex + 1}`, {
-                                    base64: base64,
-                                    row: rowIndex,
-                                    col: cellIndex + 1
-                                });
-                                
-                                // 暂时不设置占位符，避免与图片重叠
-                                cell.value = '';
-                            } else {
-                                cell.value = '';
-                            }
-                        });
-                        
-                        imagePromises.push(imagePromise);
-                    } else {
-                        cell.value = '';
-                    }
-                } else {
-                    // 处理普通文本单元格
-                    cell.value = $(this).text().trim();
-                }
-                
-                // 设置单元格边框
-                cell.border = getBorder();
-                
-                // 自动调整行高
-                if (cell.value && cell.value.toString().length > 30) {
-                    worksheet.getRow(rowIndex).height = 30;
-                }
-            });
-            
-            rowIndex++;
-        });
-        
-        // 等待所有图片加载完成
-        await Promise.all(imagePromises);
-        
-        // 将所有图片添加到工作表
-        imageColumnMap.forEach((imageInfo, key) => {
-            try {
-                // 提取图片数据（去掉data:image/jpeg;base64,前缀）
-                const imageData = imageInfo.base64.split(',')[1];
-                
-                // 添加图片到工作簿
-                const imageId = workbook.addImage({
-                    base64: imageData,
-                    extension: 'jpeg',
-                });
-                
-                // 计算图片位置和大小
-                const row = imageInfo.row;
-                const col = imageInfo.col;
-                
-                // 插入图片到工作表
-                worksheet.addImage(imageId, {
-                    tl: { col: col - 1, row: row - 1 },
-                    br: { col: col, row: row },
-                    editAs: 'oneCell'
-                });
-                
-                // 调整行高以适应图片
-                worksheet.getRow(row).height = 80;
-                
-            } catch (error) {
-                console.error('添加图片失败:', error);
-            }
-        });
-        
-        // 生成文件名
-        const filename = `${tabTitle}_${timestamp.replace(/[:\/]/g, '-')}_带图片.xlsx`;
-        
-        // 下载文件
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-    } catch (error) {
-        console.error('下载带图片的表格失败:', error);
-        // 出错时回退到原有方式
-        downloadWithoutImages($activeTab, tabTitle, timestamp);
-    }
-}
-
-// 原有XLSX下载方式
+// 修改后的XLSX下载方式，专门针对空版检货汇总表的特殊表格结构
 function downloadWithoutImages($activeTab, tabTitle, timestamp) {
     // 创建Excel工作簿
     const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.aoa_to_sheet([]);
-
+    
     // 处理表格数据
     const $table = $activeTab.find('table');
     if ($table.length) {
-        // 添加表头
+        // 获取表头
         const headers = [];
         $table.find('thead th').each(function() {
             headers.push($(this).text().trim());
         });
-        XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: 'A1' });
-
-        // 添加数据行
-        let rowIndex = 2;
-        $table.find('tbody tr').each(function() {
-            const row = [];
+        
+        // 创建完整的数据矩阵，包含所有行和列
+        const dataMatrix = [headers];
+        
+        // 获取所有行
+        const $rows = $table.find('tbody tr');
+        const numCols = headers.length;
+        
+        // 存储前一行的数据，用于填充后续行的数据
+        let previousRowData = new Array(numCols).fill('');
+        
+        // 存储合并单元格信息
+        const merges = [];
+        
+        // 记录当前SKC和其起始行号，用于合并相同SKC的行
+        let currentSKC = '';
+        let skcStartRow = -1;
+        let skcCount = 0;
+        
+        // 处理每行数据
+        $rows.each((rowIdx) => {
+            const currentRow = new Array(numCols).fill('');
+            const $cells = $($rows[rowIdx]).find('td');
             
-            $(this).find('td').each(function() {
-                // 处理复选框单元格
-                if ($(this).find('input[type="checkbox"]').length) {
-                    row.push(''); // 忽略复选框
-                }
-                // 处理图片单元格
-                else if ($(this).find('img').length) {
-                    const imgSrc = $(this).find('img').attr('src');
-                    if (imgSrc) {
-                        row.push(imgSrc);
+            // 检查当前行是否只有尺码和数量两列（这是空版检货汇总表的后续行特征）
+            if ($cells.length === 2 && headers.length === 5 && headers[2] === '尺码' && headers[3] === '数量') {
+                // 这是一个只有尺码和数量的行，需要从前一行复制其他列的数据
+                for (let i = 0; i < numCols; i++) {
+                    if (i === 2 || i === 3) {
+                        // 尺码和数量列使用当前行的数据
+                        currentRow[i] = $cells[i === 2 ? 0 : 1].textContent.trim();
                     } else {
-                        row.push('');
+                        // 其他列使用前一行的数据
+                        currentRow[i] = previousRowData[i];
                     }
-                } else {
-                    row.push($(this).text().trim());
                 }
-            });
-
-            XLSX.utils.sheet_add_aoa(worksheet, [row], { origin: `A${rowIndex}` });
-            rowIndex++;
+                
+                // 增加SKC计数
+                skcCount++;
+            } else {
+                // 如果之前有相同SKC的行，现在要处理新的SKC了，添加合并信息
+                if (skcStartRow !== -1 && skcCount > 0) {
+                    // 合并款式图片列（第0列）
+                    merges.push({
+                        s: { r: skcStartRow + 1, c: 0 }, // +1 因为第一行是表头
+                        e: { r: skcStartRow + skcCount + 1, c: 0 }
+                    });
+                    // 合并款号skc列（第1列）
+                    merges.push({
+                        s: { r: skcStartRow + 1, c: 1 },
+                        e: { r: skcStartRow + skcCount + 1, c: 1 }
+                    });
+                    // 合并件数合计列（第4列）
+                    merges.push({
+                        s: { r: skcStartRow + 1, c: 4 },
+                        e: { r: skcStartRow + skcCount + 1, c: 4 }
+                    });
+                }
+                
+                // 正常行处理
+                let colIdx = 0;
+                let currentRowSKC = '';
+                
+                $cells.each((cellIdx, cellElement) => {
+                    const $cell = $(cellElement);
+                    let cellContent = '';
+                    
+                    // 处理不同类型的单元格
+                    if ($cell.find('input[type="checkbox"]').length) {
+                        cellContent = '';
+                    } else if ($cell.find('img').length) {
+                        const imgSrc = $cell.find('img').attr('src');
+                        cellContent = imgSrc || '';
+                    } else {
+                        cellContent = $cell.text().trim();
+                        // 检查是否是SKC列
+                        if (colIdx === 1) {
+                            currentRowSKC = cellContent;
+                        }
+                    }
+                    
+                    // 获取合并信息
+                    const colspan = parseInt($cell.attr('colspan') || 1);
+                    const rowspan = parseInt($cell.attr('rowspan') || 1);
+                    
+                    // 填充当前单元格
+                    for (let i = 0; i < colspan; i++) {
+                        if (colIdx + i < numCols) {
+                            currentRow[colIdx + i] = cellContent;
+                        }
+                    }
+                    
+                    colIdx += colspan;
+                });
+                
+                // 检查是否是新的SKC
+                if (currentRowSKC !== currentSKC) {
+                    currentSKC = currentRowSKC;
+                    skcStartRow = rowIdx;
+                    skcCount = 0;
+                }
+                
+                // 保存当前行数据，用于可能的后续行
+                previousRowData = [...currentRow];
+            }
+            
+            // 只添加非空行（避免空行问题）
+            if (!currentRow.every(cell => cell === '')) {
+                dataMatrix.push(currentRow);
+            }
         });
+        
+        // 处理最后一组相同SKC的行
+        if (skcStartRow !== -1 && skcCount > 0) {
+            // 合并款式图片列（第0列）
+            merges.push({
+                s: { r: skcStartRow + 1, c: 0 }, // +1 因为第一行是表头
+                e: { r: skcStartRow + skcCount + 1, c: 0 }
+            });
+            // 合并款号skc列（第1列）
+            merges.push({
+                s: { r: skcStartRow + 1, c: 1 },
+                e: { r: skcStartRow + skcCount + 1, c: 1 }
+            });
+            // 合并件数合计列（第4列）
+            merges.push({
+                s: { r: skcStartRow + 1, c: 4 },
+                e: { r: skcStartRow + skcCount + 1, c: 4 }
+            });
+        }
+        
+        // 创建工作表
+        const worksheet = XLSX.utils.aoa_to_sheet(dataMatrix);
+        
+        // 应用合并单元格，使相同SKC的行合并SKC和图片列
+        if (merges.length > 0) {
+            worksheet['!merges'] = merges;
+        }
+        
+        // 添加工作表到工作簿
+        XLSX.utils.book_append_sheet(workbook, worksheet, tabTitle);
     }
-
-    // 添加工作表到工作簿
-    XLSX.utils.book_append_sheet(workbook, worksheet, tabTitle);
 
     // 生成Excel文件
     const filename = `${tabTitle}_${timestamp.replace(/[:\/]/g, '-')}.xlsx`;
     XLSX.writeFile(workbook, filename);
-}
-
-// 将图片加载为base64
-function loadImageAsBase64(url) {
-    return new Promise((resolve, reject) => {
-        try {
-            // 检查URL是否是data URL
-            if (url.startsWith('data:image')) {
-                resolve(url);
-                return;
-            }
-            
-            // 创建图片对象
-            const img = new Image();
-            img.crossOrigin = 'anonymous'; // 允许跨域加载
-            
-            img.onload = function() {
-                try {
-                    // 创建canvas元素
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // 设置canvas大小与图片相同
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    
-                    // 在canvas上绘制图片
-                    ctx.drawImage(img, 0, 0);
-                    
-                    // 将canvas内容转换为base64
-                    const base64 = canvas.toDataURL('image/jpeg', 0.8);
-                    resolve(base64);
-                } catch (error) {
-                    console.error('图片转换失败:', error);
-                    resolve(null);
-                }
-            };
-            
-            img.onerror = function() {
-                console.error('图片加载失败:', url);
-                resolve(null);
-            };
-            
-            // 设置图片源
-            img.src = url;
-        } catch (error) {
-            console.error('加载图片时出错:', error);
-            resolve(null);
-        }
-    });
 }
 
 // 获取单元格边框样式

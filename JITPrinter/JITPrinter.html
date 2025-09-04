@@ -6,11 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>仓储JIT匹配打单系统</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
+    <script src="xlsx.full.min.js"></script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        
+    </style>
     <script src="imagePreview.js"></script>
     <script src="printUtils.js"></script>
+    <script src="mappingUploader.js"></script>
     <script src="app.js"></script>
 </head>
 
@@ -57,31 +60,14 @@
             <!-- 右侧：上传控制面板 (30%) -->
             <div class="card upload-card">
                 <div class="upload-section">
-                    <div class="upload-title">SKU-SKC映射表</div>
-                    <input type="file" id="mappingFile" class="file-input" accept=".xlsx,.xls,.csv">
-                    <button class="upload-btn" onclick="document.getElementById('mappingFile').click()">
-                        选择Excel/CSV格式文件
+                    <div class="upload-title">JIT基础映射表</div>
+                    <input type="file" id="mappingFileInput" class="file-input" accept=".xlsx,.xls" style="display:none;">
+                    <button class="upload-btn" onclick="document.getElementById('mappingFileInput').click()">
+                        选择Excel格式文件
                     </button>
+                    <div class="upload-hint">需包含：SKU-SKC映射表、SKC2印花大小映射表、印花图片映射表</div>
                     <div id="mappingStatus" class="status">等待上传映射表...</div>
                     <div id="mappingError" class="error"></div>
-                </div>
-                <div class="upload-section">
-                    <div class="upload-title">SKC-印花大小映射表</div>
-                    <input type="file" id="skcMappingFile" class="file-input" accept=".xlsx,.xls,.csv">
-                    <button class="upload-btn" onclick="document.getElementById('skcMappingFile').click()">
-                        选择Excel/CSV格式文件
-                    </button>
-                    <div id="skcMappingStatus" class="status">等待上传映射表...</div>
-                    <div id="skcMappingError" class="error"></div>
-                </div>
-                <div class="upload-section">
-                    <div class="upload-title">印花图片映射表</div>
-                    <input type="file" class="file-input" id="patternImageFile" accept=".csv,.xls,.xlsx" />
-                    <button class="upload-btn" onclick="document.getElementById('patternImageFile').click()">
-                        选择Excel/CSV格式文件
-                    </button>
-                    <div id="patternImageStatus" class="status">等待上传映射表...</div>
-                    <div id="patternImageError" class="error"></div>
                 </div>
                 <div class="upload-section">
                     <div class="upload-title">销售数据表</div>
@@ -103,7 +89,7 @@
                     <button class="preview-btn" id="previewBtn" disabled>生成表单</button>
                     <button class="preview-btn" id="downloadDeleteBtn" disabled>备份并删除选中数据</button>
                     <button class="preview-btn" id="copyBtn" disabled>下载条码表</button>
-                    <button class="preview-btn" id="downloadEmptySheetBtn" disabled>点击下载空版组单表</button>
+                    <button class="preview-btn" id="downloadEmptySheetBtn" disabled>下载空版组单表</button>
                 </div>
             </div>
         </div>
