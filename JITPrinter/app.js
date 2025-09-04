@@ -84,9 +84,16 @@ if (!window.JITOrderSystem) {
                 this.copyOriginalSkus();
             });
 
+            // 下载空版组单表按钮
+            $('#downloadEmptySheetBtn').on('click', () => {
+                this.downloadEmptySheet();
+            });
+
             // 批次输入框变化时启用预览按钮
             $('#batchInput').on('input', () => {
-                $('#previewBtn').prop('disabled', !$('#batchInput').val().trim());
+                const hasBatch = !!$('#batchInput').val().trim();
+                $('#previewBtn').prop('disabled', !hasBatch);
+                $('#downloadEmptySheetBtn').prop('disabled', !hasBatch);
             });
         }
 
@@ -185,8 +192,9 @@ if (!window.JITOrderSystem) {
                 $status.text(`解析 ${data.length} 条数据成功！`).addClass('status-success');
                 // 保持成功状态显示，不再自动移除
 
-                // 启用预览按钮
-                $('#previewBtn').prop('disabled', false);
+                // 启用预览按钮和下载空版组单表按钮
+        $('#previewBtn').prop('disabled', false);
+        $('#downloadEmptySheetBtn').prop('disabled', false);
 
             } catch (err) {
                 $error.text(`销售表解析错误: ${err.message}`);
@@ -808,6 +816,66 @@ if (!window.JITOrderSystem) {
             // 显示成功提示
             this.showToast(`已下载 ${finalData.length} 条数据（含sticker记录）到Excel文件！`);
         }
+        
+        // 下载空版组单表
+        downloadEmptySheet() {
+            if (!this.processedData || this.processedData.length === 0) {
+                this.showToast('没有数据可供下载，请先生成表单！');
+                return;
+            }
+            
+            // 提取SKU并统计数量
+            const skuQuantityMap = new Map();
+            
+            this.processedData.forEach(item => {
+                // 获取SKU并去掉最后一个"-"及后面的内容
+                const sku = item.originalSku;
+                if (sku) {
+                    // 查找最后一个"-"的位置
+                    const lastDashIndex = sku.lastIndexOf('-');
+                    const processedSku = lastDashIndex > 0 ? sku.substring(0, lastDashIndex) : sku;
+                    
+                    // 统计数量
+                    const currentQuantity = skuQuantityMap.get(processedSku) || 0;
+                    skuQuantityMap.set(processedSku, currentQuantity + item.quantity);
+                }
+            });
+            
+            // 创建导出数据
+            const exportData = [];
+            skuQuantityMap.forEach((quantity, sku) => {
+                exportData.push({
+                    '商品编码': sku,
+                    '数量': quantity
+                });
+            });
+            
+            // 创建工作簿
+            const wb = XLSX.utils.book_new();
+            
+            // 转换数据为工作表格式
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            
+            // 设置列宽
+            const colWidths = [
+                { wch: 20 }, // 商品编码列宽
+                { wch: 10 }  // 数量列宽
+            ];
+            ws['!cols'] = colWidths;
+            
+            // 添加工作表到工作簿
+            XLSX.utils.book_append_sheet(wb, ws, '空版组单表');
+            
+            // 生成文件名
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `${this.batchNumber}_空版组单表_${timestamp}.xlsx`;
+            
+            // 下载文件
+            XLSX.writeFile(wb, filename);
+            
+            // 显示成功提示
+            this.showToast(`已下载空版组单表，共 ${exportData.length} 条SKU数据！`);
+        }
 
         removeSelectedDataFromProcessed(selectedData) {
             // 从processedData中删除选中数据
@@ -1043,56 +1111,273 @@ function setupDownloadButton() {
             // 获取当前tab的标题
             const tabTitle = $('.tab-btn.active').text();
             const timestamp = new Date().toLocaleString('zh-CN');
-
-            // 创建Excel工作簿
-            const workbook = XLSX.utils.book_new();
-            const worksheet = XLSX.utils.aoa_to_sheet([]);
-
-            // 处理表格数据
-            const $table = $activeTab.find('table');
-            if ($table.length) {
-                // 添加表头
-                const headers = [];
-                $table.find('thead th').each(function() {
-                    headers.push($(this).text().trim());
-                });
-                XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: 'A1' });
-
-                // 添加数据行
-                let rowIndex = 2;
-                $table.find('tbody tr').each(function() {
-                    const row = [];
-                    
-                    $(this).find('td').each(function() {
-                        // 处理复选框单元格
-                        if ($(this).find('input[type="checkbox"]').length) {
-                            row.push(''); // 忽略复选框
-                        }
-                        // 处理图片单元格
-                        else if ($(this).find('img').length) {
-                            const imgSrc = $(this).find('img').attr('src');
-                            if (imgSrc) {
-                                row.push(imgSrc);
-                            } else {
-                                row.push('');
-                            }
-                        } else {
-                            row.push($(this).text().trim());
-                        }
-                    });
-
-                    XLSX.utils.sheet_add_aoa(worksheet, [row], { origin: `A${rowIndex}` });
-                    rowIndex++;
-                });
-            }
-
-            // 添加工作表到工作簿
-            XLSX.utils.book_append_sheet(workbook, worksheet, tabTitle);
-
-            // 生成Excel文件
-            XLSX.writeFile(workbook, `${tabTitle}_${timestamp.replace(/[:\/]/g, '-')}.xlsx`);
+            
+            // 为了避免CORS跨域问题，直接使用原有方式下载表格
+            downloadWithoutImages($activeTab, tabTitle, timestamp);
         }
     });
+}
+
+// 使用ExcelJS下载带图片的表格
+async function downloadWithImages($activeTab, tabTitle, timestamp) {
+    try {
+        // 创建ExcelJS工作簿
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet(tabTitle);
+        
+        const $table = $activeTab.find('table');
+        
+        // 记录哪些列包含图片
+        const imageColumns = [];
+        const imageColumnMap = new Map(); // 存储单元格位置到图片的映射
+        
+        // 添加表头
+        const headers = [];
+        $table.find('thead th').each(function(index) {
+            const headerText = $(this).text().trim();
+            headers.push(headerText);
+            
+            // 设置表头单元格样式
+            const cell = worksheet.getCell(1, index + 1);
+            cell.value = headerText;
+            cell.font = { bold: true };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            cell.border = getBorder();
+        });
+        
+        // 调整列宽
+        for (let i = 1; i <= headers.length; i++) {
+            worksheet.getColumn(i).width = 15; // 默认列宽
+        }
+        
+        // 添加数据行
+        let rowIndex = 2;
+        const imagePromises = [];
+        
+        $table.find('tbody tr').each(function(rowNum) {
+            $(this).find('td').each(function(cellIndex) {
+                const cell = worksheet.getCell(rowIndex, cellIndex + 1);
+                
+                // 处理复选框单元格
+                if ($(this).find('input[type="checkbox"]').length) {
+                    cell.value = ''; // 忽略复选框
+                }
+                // 处理图片单元格
+                else if ($(this).find('img').length) {
+                    const img = $(this).find('img');
+                    const imgSrc = img.attr('src');
+                    
+                    if (imgSrc) {
+                        // 记录包含图片的列
+                        if (!imageColumns.includes(cellIndex)) {
+                            imageColumns.push(cellIndex);
+                            worksheet.getColumn(cellIndex + 1).width = 20; // 为图片列设置更大的宽度
+                        }
+                        
+                        // 添加图片加载承诺
+                        const imagePromise = loadImageAsBase64(imgSrc).then(base64 => {
+                            if (base64) {
+                                // 存储图片位置映射，稍后处理
+                                imageColumnMap.set(`${rowIndex},${cellIndex + 1}`, {
+                                    base64: base64,
+                                    row: rowIndex,
+                                    col: cellIndex + 1
+                                });
+                                
+                                // 暂时不设置占位符，避免与图片重叠
+                                cell.value = '';
+                            } else {
+                                cell.value = '';
+                            }
+                        });
+                        
+                        imagePromises.push(imagePromise);
+                    } else {
+                        cell.value = '';
+                    }
+                } else {
+                    // 处理普通文本单元格
+                    cell.value = $(this).text().trim();
+                }
+                
+                // 设置单元格边框
+                cell.border = getBorder();
+                
+                // 自动调整行高
+                if (cell.value && cell.value.toString().length > 30) {
+                    worksheet.getRow(rowIndex).height = 30;
+                }
+            });
+            
+            rowIndex++;
+        });
+        
+        // 等待所有图片加载完成
+        await Promise.all(imagePromises);
+        
+        // 将所有图片添加到工作表
+        imageColumnMap.forEach((imageInfo, key) => {
+            try {
+                // 提取图片数据（去掉data:image/jpeg;base64,前缀）
+                const imageData = imageInfo.base64.split(',')[1];
+                
+                // 添加图片到工作簿
+                const imageId = workbook.addImage({
+                    base64: imageData,
+                    extension: 'jpeg',
+                });
+                
+                // 计算图片位置和大小
+                const row = imageInfo.row;
+                const col = imageInfo.col;
+                
+                // 插入图片到工作表
+                worksheet.addImage(imageId, {
+                    tl: { col: col - 1, row: row - 1 },
+                    br: { col: col, row: row },
+                    editAs: 'oneCell'
+                });
+                
+                // 调整行高以适应图片
+                worksheet.getRow(row).height = 80;
+                
+            } catch (error) {
+                console.error('添加图片失败:', error);
+            }
+        });
+        
+        // 生成文件名
+        const filename = `${tabTitle}_${timestamp.replace(/[:\/]/g, '-')}_带图片.xlsx`;
+        
+        // 下载文件
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+    } catch (error) {
+        console.error('下载带图片的表格失败:', error);
+        // 出错时回退到原有方式
+        downloadWithoutImages($activeTab, tabTitle, timestamp);
+    }
+}
+
+// 原有XLSX下载方式
+function downloadWithoutImages($activeTab, tabTitle, timestamp) {
+    // 创建Excel工作簿
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet([]);
+
+    // 处理表格数据
+    const $table = $activeTab.find('table');
+    if ($table.length) {
+        // 添加表头
+        const headers = [];
+        $table.find('thead th').each(function() {
+            headers.push($(this).text().trim());
+        });
+        XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: 'A1' });
+
+        // 添加数据行
+        let rowIndex = 2;
+        $table.find('tbody tr').each(function() {
+            const row = [];
+            
+            $(this).find('td').each(function() {
+                // 处理复选框单元格
+                if ($(this).find('input[type="checkbox"]').length) {
+                    row.push(''); // 忽略复选框
+                }
+                // 处理图片单元格
+                else if ($(this).find('img').length) {
+                    const imgSrc = $(this).find('img').attr('src');
+                    if (imgSrc) {
+                        row.push(imgSrc);
+                    } else {
+                        row.push('');
+                    }
+                } else {
+                    row.push($(this).text().trim());
+                }
+            });
+
+            XLSX.utils.sheet_add_aoa(worksheet, [row], { origin: `A${rowIndex}` });
+            rowIndex++;
+        });
+    }
+
+    // 添加工作表到工作簿
+    XLSX.utils.book_append_sheet(workbook, worksheet, tabTitle);
+
+    // 生成Excel文件
+    const filename = `${tabTitle}_${timestamp.replace(/[:\/]/g, '-')}.xlsx`;
+    XLSX.writeFile(workbook, filename);
+}
+
+// 将图片加载为base64
+function loadImageAsBase64(url) {
+    return new Promise((resolve, reject) => {
+        try {
+            // 检查URL是否是data URL
+            if (url.startsWith('data:image')) {
+                resolve(url);
+                return;
+            }
+            
+            // 创建图片对象
+            const img = new Image();
+            img.crossOrigin = 'anonymous'; // 允许跨域加载
+            
+            img.onload = function() {
+                try {
+                    // 创建canvas元素
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // 设置canvas大小与图片相同
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    // 在canvas上绘制图片
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // 将canvas内容转换为base64
+                    const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                    resolve(base64);
+                } catch (error) {
+                    console.error('图片转换失败:', error);
+                    resolve(null);
+                }
+            };
+            
+            img.onerror = function() {
+                console.error('图片加载失败:', url);
+                resolve(null);
+            };
+            
+            // 设置图片源
+            img.src = url;
+        } catch (error) {
+            console.error('加载图片时出错:', error);
+            resolve(null);
+        }
+    });
+}
+
+// 获取单元格边框样式
+function getBorder() {
+    return {
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } }
+    };
 }
 
 // 初始化系统
