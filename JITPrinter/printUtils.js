@@ -40,12 +40,62 @@ if (typeof window !== 'undefined' && !window.PrintUtils) {
                     const tabTitle = $('.tab-btn.active').text();
                     const timestamp = new Date().toLocaleString('zh-CN');
 
-                    // 获取批次号
-                    const batchNumber = window.salesDataSummary.batchNumber || '';
+                    // 直接从页面元素中获取汇总数据，而不是依赖全局变量
+                    const batchNumber = $('#batchNumber').text() || window.salesDataSummary.batchNumber || '';
+                    const styleSKCCount = parseInt($('#styleSKCCount').text()) || window.salesDataSummary.styleSKCCount || 0;
+                    const orderQuantity = parseInt($('#orderQuantity').text()) || window.salesDataSummary.orderQuantity || 0;
+                    const printTypeCount = parseInt($('#printTypeCount').text()) || window.salesDataSummary.printTypeCount || 0;
 
-                    // 获取全局销售数据汇总
-                    const styleSKCCount = window.salesDataSummary.styleSKCCount || 0;
-                    const orderQuantity = window.salesDataSummary.orderQuantity || 0;
+                    // 准备表格HTML内容并预处理（直接在HTML字符串中添加merged-cell类）
+                    let tableHtml = $(activeTab).find('table').length ? $(activeTab).find('table')[0].outerHTML : activeTab.innerHTML;
+
+                    // 在表格HTML字符串中直接为图片列和SKC列的td添加merged-cell类
+                    // 1. 先将HTML转换为jQuery对象进行操作
+                    let tempTable = $(tableHtml);
+
+                    // 3. 判断是否为空版检货表格并添加相应类
+                    if (tabTitle.includes('检货') && tempTable.find('tbody tr').length > 1) {
+                        const firstDataRow = tempTable.find('tbody tr').eq(1);
+                        if (firstDataRow.find('td').length > 0 && firstDataRow.find('td').eq(0).text().trim() === '') {
+                            tempTable.addClass('empty-check-table');
+                        }
+                    }
+
+                    // 2. 遍历表格行，直接添加merged-cell类
+                    tempTable.find('tbody tr').each(function () {
+                        let cells = $(this).find('td');
+
+                        // 检查是否为SKC组的第一行（有图片单元格）
+                        if (cells.length > 0 && cells.eq(0).find('img').length > 0) {
+                            // 直接为图片列（第一列）和SKC列（第三列）添加merged-cell类
+                            cells.eq(0).addClass('merged-cell');
+                            if (cells.length > 2) {
+                                cells.eq(2).addClass('merged-cell');
+                            }
+                            // 标记为SKC组行
+                            $(this).addClass('skc-group-row');
+                        }
+
+                        // 为具有rowspan属性的td添加merged-cell类
+                        // 空版检货单特殊处理：不给尺码列和件数合集列添加merged-cell类
+                        if (tempTable.hasClass('empty-check-table')) {
+                            // 对于空版检货单，图片列和SKC列的rowspan单元格仍需要merged-cell类
+                            // 第一列（图片列）和第三列（SKC列）
+                            cells.eq(0).filter('[rowspan]').addClass('merged-cell');
+                            if (cells.length > 2) {
+                                cells.eq(2).filter('[rowspan]').addClass('merged-cell');
+                            }
+                        } else {
+                            // 非空版检货单，为所有具有rowspan属性的td添加merged-cell类
+                            cells.filter('[rowspan]').addClass('merged-cell');
+                        }
+                    });
+
+                    // 4. 转换回HTML字符串
+                    let processedTableHtml = tempTable.prop('outerHTML');
+
+                    // 检查是否为空版检货表格
+                    const isEmptyCheckTable = tempTable.hasClass('empty-check-table');
 
                     // 构建打印内容
                     printWindow.document.write(`
@@ -55,197 +105,27 @@ if (typeof window !== 'undefined' && !window.PrintUtils) {
                             <title>${tabTitle} - ${timestamp}</title>
                             <link rel="stylesheet" href="style.css">
                             <style>
-                                /* 全局样式 */
-                                * {
-                                    box-sizing: border-box;
-                                }
-                                 
-                                html, body {
-                                    height: 100%;
-                                    margin: 0;
-                                    padding: 0;
-                                    font-family: Arial, sans-serif;
-                                    background: white;
-                                }
-                                 
-                                /* 页面容器 */
-                                .print-container {
-                                    min-height: 100vh;
-                                    display: flex;
-                                    flex-direction: column;
-                                    justify-content: flex-start;
-                                    align-items: center;
-                                    padding: 20px 40px 40px;
-                                    text-align: center;
-                                    page-break-inside: avoid; 
-                                }
-                                 
-                                /* 页眉样式 - 确保在打印预览和实际打印中都正确显示 */
-                                .print-header {
-                                    display: flex;
-                                    justify-content: center;
-                                    align-items: center;
-                                    justify-content: space-between;
-                                    width: 100%;
-                                    margin-bottom: 30px;
-                                    padding: 15px 0;
-                                    border-bottom: 1px solid #ddd;
-                                    font-size: 16px;
-                                    color: #000;
-                                    text-align: center;
-                                    justify-content: space-evenly;
-                                }
-                                /* 数据汇总部分 */
-                                .summary-section {
-                                    width: 100%;
-                                    margin-bottom: 30px;
-                                }
-                                 
-                                .summary-title {
-                                    font-size: 20px;
-                                    font-weight: bold;
-                                    margin-bottom: 15px;
-                                    color: #333;
-                                }
-                                 
-                                .summary-content {
-                                    font-size: 16px;
-                                    color: #666;
-                                }
-                                 
-                                /* 表格内容 */
-                                .table-container {
-                                    width: 100%;
-                                    overflow-x: auto;
-                                }
-                                 
-                                table {
-                                    width: 100%;
-                                    border-collapse: collapse;
-                                }
-                                 
-                                th, td {
-                                    text-align: center;
-                                    border: 1px solid #ddd;
-                                }
-                                 
-                                th {
-                                    background-color: #f2f2f2;
-                                    font-weight: bold;
-                                    color: #333;
-                                }
-                                 
-                                tr:nth-child(even) {
-                                    background-color: #f9f9f9;
-                                }
-                                 
-                                /* 隐藏包含复选框的整列 */
-                                th.select,
-                                td.select {
-                                    display: none !important;
-                                    width: 0 !important;
-                                    max-width: 0 !important;
-                                    overflow: hidden !important;
-                                }
-                                 
-                                /* 打印专用样式 */
-                                @media print {
-                                    body {
-                                        -webkit-print-color-adjust: exact;
-                                        print-color-adjust: exact;
-                                    }
-                                      
-                                    /* 确保所有页面的打印容器样式一致 */
-                                    .print-container {
-                                        min-height: auto;
-                                        height: auto;
-                                        page-break-inside: avoid;
-                                        padding: 0;
-                                    }
-                                      
-                                    /* 确保表格在打印时正确显示 */
-                                    table {
-                                        width: 100%;
-                                        border-collapse: collapse;
-                                        font-size: 14px;
-                                        page-break-inside: auto;
-                                    }
-
-                                    /* 关键修复：确保thead在每一页都重复显示 */
-                                    thead {
-                                        display: table-header-group !important;
-                                        page-break-inside: avoid !important;
-                                        page-break-after: avoid !important;
-                                    }
-
-                                    /* 确保表格行和列不会跨页拆分 */
-                                    tr {
-                                        page-break-inside: avoid;
-                                        page-break-after: auto;
-                                    }
-                                      
-                                    tbody {
-                                        display: table-row-group;
-                                    }
-                                      
-                                    /* 确保表格标题不被拆分到不同页面 */
-                                    th {
-                                        page-break-after: avoid;
-                                        break-after: avoid;
-                                    }
-                                      
-                                    /* 隐藏summary-header和print-header，因为页眉已经包含了相同的数据 */
-                                    .summary-header,
-                                    .print-header {
-                                        display: none !important;
-                                    }
-                                      
-                                    /* 页眉页脚设置 - 确保多页打印时所有页面都显示页眉和页脚 */
-                                    @page {
-                                        /* 打印纸张边距设置 - 可以根据需要调整这些值
-                                           margin-top: 上边距
-                                           margin-bottom: 下边距
-                                           margin-left: 左边距
-                                           margin-right: 右边距
-                                           单位为像素(px) */
-                                        margin-top: 100px;
-                                        margin-bottom: 100px;
-                                        margin-left: 30px;
-                                        margin-right: 30px;
-                                           
-                                        @top-center {
-                                            content: "${tabTitle} ★ 总款数: ${styleSKCCount} ★ 订单件数: ${orderQuantity} ★ 批次: ${batchNumber}-" counter(page);
-                                            font-size: 26px;
-                                            color: #000;
-                                            font-weight: bold;
-                                            white-space: nowrap;
-                                            text-align: center;
-                                            /* 固定页眉位置 */
-                                            position: running(header);
-                                        }
-                                        
-                                        @bottom-center {
-                                            content: "${timestamp} ★ 页码: " counter(page) "/" counter(pages);
-                                            font-size: 20px;
-                                            color: #000;
-                                            white-space: nowrap;
-                                            text-align: center;
-                                        }
-                                    }
+                                :root {
+                                    --header-title: '${tabTitle}';
+                                    --header-style-count: '${styleSKCCount}';
+                                    --header-order-quantity: '${orderQuantity}';
+                                    --header-batch-number: '${batchNumber}';
+                                    --header-timestamp: '${timestamp}';
                                 }
                             </style>
                         </head>
                         <body>
                             <div class="print-container">
-                                <!-- 页眉部分 - 确保在打印预览中也能看到 -->
-                                <div class="print-header" style="font-size: 18px; font-weight: bold; color: #000;">
-                                   <div>${tabTitle}</div> | <div>款式汇总: <span id="styleSummary">${styleSKCCount} 款</span> </div>| <div>订单件数: <span id="orderQuantity">${orderQuantity} 件</span> </div>| <div>批次: ${batchNumber}</div>
+                                <!-- CSS @page规则会在每一页顶部自动显示页眉 -->
+                                <!-- 下面的div用于屏幕预览时显示页眉，打印时会被CSS控制 -->
+                                <div class="print-header-screen">
+                                   <div>${tabTitle}</div> ★ <div>款式汇总: <span id="styleSummary">${styleSKCCount} 款</span> </div> ★ <div>订单件数: <span id="orderQuantity">${orderQuantity} 件</span> </div> ★ <div>批次: ${batchNumber}</div>
                                 </div>
                                 
                                 <!-- 表格内容部分 -->
                                 <div class="table-container">
-                                    <!-- 确保我们只获取表格内容 -->
-                                    ${$(activeTab).find('table').length ? $(activeTab).find('table')[0].outerHTML : activeTab.innerHTML}
+                                    <!-- 使用预处理后的表格HTML内容 -->
+                                    ${processedTableHtml}
                                 </div>
                             </div>
                         </body>
