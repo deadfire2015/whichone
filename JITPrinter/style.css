@@ -247,11 +247,13 @@ table {
 
 th,
 td {
-    border: 1px solid #747474;
-    text-align: left;
-    font-size: 16px;
+    border: 1px solid #000000;
     text-align: center;
-    min-width: 88px;
+    font-size: 16px;
+    padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 td.select {
@@ -645,6 +647,14 @@ tr:nth-child(even) {
 
     table {
         page-break-inside: auto;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        /* 打印时使用更粗的黑色边框，确保清晰可见 */
+        border: 0.75pt solid #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     tr {

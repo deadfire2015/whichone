@@ -202,7 +202,7 @@ if (!window.JITOrderSystem) {
                 
                 this.validateSalesData(data);
                 
-                // 检查销售数量为0的数据
+                // 检查数量为0的数据
                 const zeroQuantitySkus = [];
                 data.forEach(row => {
                     const sku = row[this.fieldNames.sales.sku]?.toString().trim();
@@ -212,7 +212,7 @@ if (!window.JITOrderSystem) {
                     }
                 });
                 
-                // 如果存在销售数量为0的数据，显示提示
+                // 如果存在数量为0的数据，显示提示
                 if (zeroQuantitySkus.length > 0) {
                     // 使用红色样式显示警告信息
                     $status.text(`解析 ${data.length} 条数据成功！\n但存在销量为0的数据`).css('color', '#dc3545').css('font-weight', '500').css('white-space', 'pre-line');
@@ -453,7 +453,7 @@ if (!window.JITOrderSystem) {
         }
 
         parseSku(sku, skc = null) {
-            // SKU格式解析逻辑：从原始SKU中减去匹配的SKC部分，剩余部分用"-"分隔，左边为尺码，右边为印花编号
+            // SKU格式解析逻辑：从原始SKU中减去匹配的SKC部分，剩余部分用"-"分隔，左边为尺码，右边为印花号
             const skuStr = sku.toString().trim();
 
             // 如果有SKC映射，从原始SKU中减去SKC部分
@@ -477,7 +477,7 @@ if (!window.JITOrderSystem) {
 
                 return {
                     skc: skc || skuStr,  // 使用映射的SKC或原始SKU
-                    pattern: pattern,    // 最后一部分为印花编号
+                    pattern: pattern,    // 最后一部分为印花号
                     size: size           // 前面部分为尺码
                 };
             }
@@ -548,7 +548,7 @@ if (!window.JITOrderSystem) {
                 if (a.skc < b.skc) return -1;
                 if (a.skc > b.skc) return 1;
 
-                // 第二优先级: 印花编号
+                // 第二优先级: 印花号
                 if (a.pattern < b.pattern) return -1;
                 if (a.pattern > b.pattern) return 1;
 
@@ -687,9 +687,9 @@ if (!window.JITOrderSystem) {
                         <th class="select "><input type="checkbox" id="selectAll" title="全选/取消全选"></th>
                         <th>图片</th>
                         <th>SKC</th>
-                        <th>印花编号</th>
+                        <th>印花号</th>
                         <th>尺码</th>
-                        <th>销售数量</th>
+                        <th>数量</th>
                         <th>原始SKU(条码)</th>
                     </tr>
                 </thead>
@@ -971,7 +971,7 @@ if (!window.JITOrderSystem) {
                 'SKC': item.skc,
                 '印花编码': item.pattern,
                 '尺码': item.size,
-                '销售数量': item.quantity,
+                '数量': item.quantity,
                 '原始SKU': item.originalSku
             }));
 
