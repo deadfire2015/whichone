@@ -1,0 +1,81 @@
+{
+  "version": "1.0",
+  "description": "尺码对应印花规格映射表",
+  "printSpecifications": [
+    {
+      "sizeGroup": "Normal",
+      "description": "婴童烫画20-25cm",
+      "sizeArray": [
+        "0-3M",
+        "3-6M",
+        "6-9M",
+        "9-12M",
+        "12-18M",
+        "18-24M",
+        "2Y",
+        "3Y",
+        "4Y",
+        "5Y",
+        "6Y",
+        "1-2Y",
+        "2-3Y",
+        "3-4Y",
+        "4-5Y",
+        "5-6Y",
+        "62",
+        "68",
+        "74",
+        "70",
+        "80",
+        "90",
+        "100",
+        "110",
+        "120"
+      ]
+    },
+    {
+      "sizeGroup": "Medium",
+      "description": "大中小童烫画26-35cm",
+      "sizeArray": [
+        "7Y",
+        "8Y",
+        "9Y",
+        "10Y",
+        "11Y",
+        "12Y",
+        "13Y",
+        "14Y",
+        "15Y",
+        "7-8Y",
+        "9-10Y",
+        "11-12Y",
+        "13-14Y",
+        "14-15Y",
+        "15-16Y",
+        "130",
+        "140",
+        "150",
+        "160"
+      ]
+    },
+    {
+      "sizeGroup": "Large",
+      "description": "成人烫画36-45cm",
+      "sizeArray": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL",
+        "XXXL"
+      ]
+    },
+    {
+      "sizeGroup": "Small",
+      "description": "婴儿烫画15-19cm",
+      "sizeArray": [
+        "10cm"
+      ]
+    }
+  ]
+}

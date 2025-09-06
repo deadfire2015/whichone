@@ -64,12 +64,17 @@ if (typeof window !== 'undefined' && !window.PrintUtils) {
                     // 2. 遍历表格行，直接添加merged-cell类
                     tempTable.find('tbody tr').each(function () {
                         let cells = $(this).find('td');
+                        
+                        // 检查当前是否是烫画数量汇总表（patternSummary）
+                        const isPatternSummary = tabTitle.includes('烫画数量汇总');
 
                         // 检查是否为SKC组的第一行（有图片单元格）
                         if (cells.length > 0 && cells.eq(0).find('img').length > 0) {
-                            // 直接为图片列（第一列）和SKC列（第三列）添加merged-cell类
+                            // 直接为图片列（第一列）添加merged-cell类
                             cells.eq(0).addClass('merged-cell');
-                            if (cells.length > 2) {
+                            
+                            // 对于其他列，只有非空版检货单且非烫画数量汇总表才添加merged-cell类
+                            if (cells.length > 2 && !tempTable.hasClass('empty-check-table') && !isPatternSummary) {
                                 cells.eq(2).addClass('merged-cell');
                             }
                             // 标记为SKC组行
@@ -77,16 +82,15 @@ if (typeof window !== 'undefined' && !window.PrintUtils) {
                         }
 
                         // 为具有rowspan属性的td添加merged-cell类
-                        // 空版检货单特殊处理：不给尺码列和件数合集列添加merged-cell类
                         if (tempTable.hasClass('empty-check-table')) {
-                            // 对于空版检货单，图片列和SKC列的rowspan单元格仍需要merged-cell类
-                            // 第一列（图片列）和第三列（SKC列）
+                            // 空版检货单特殊处理：只为图片列添加merged-cell类，不给尺码列和其他列添加
+                            // 第一列（图片列）
                             cells.eq(0).filter('[rowspan]').addClass('merged-cell');
-                            if (cells.length > 2) {
-                                cells.eq(2).filter('[rowspan]').addClass('merged-cell');
-                            }
+                        } else if (isPatternSummary) {
+                            // 烫画数量汇总表，只为图片列添加merged-cell类
+                            cells.eq(0).filter('[rowspan]').addClass('merged-cell');
                         } else {
-                            // 非空版检货单，为所有具有rowspan属性的td添加merged-cell类
+                            // 其他表格类型，为所有具有rowspan属性的td添加merged-cell类
                             cells.filter('[rowspan]').addClass('merged-cell');
                         }
                     });

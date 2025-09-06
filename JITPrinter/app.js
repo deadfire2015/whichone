@@ -17,6 +17,7 @@ if (!window.JITOrderSystem) {
             this.processedData = null;
             this.batchNumber = '';
             this.patternImageData = null; // 新增：印花图片映射表数据
+            this.sizeToPrintSpecification = null; // 新增：尺码对应印花规格映射表数据
 
             // 全局字段配置
             this.fieldNames = {
@@ -50,7 +51,82 @@ if (!window.JITOrderSystem) {
                 this.barcodeDownloader = new window.BarcodeDownloader(this);
             }
 
+            // 加载尺码对应印花规格映射表
+            this.loadSizeToPrintSpecification();
+
             this.initializeEventListeners();
+        }
+
+        /**
+         * 加载尺码对应印花规格映射表
+         */
+        async loadSizeToPrintSpecification() {
+            try {
+                // 从当前目录加载sizeToPrintSpecification.json文件
+                const response = await fetch('sizeToPrintSpecification.json');
+                if (!response.ok) {
+                    throw new Error('Failed to load sizeToPrintSpecification.json');
+                }
+                this.sizeToPrintSpecification = await response.json();
+                console.log('尺码对应印花规格映射表加载成功');
+            } catch (error) {
+                console.error('加载尺码对应印花规格映射表失败:', error);
+                // 如果加载失败，初始化一个空对象
+                this.sizeToPrintSpecification = {
+                    version: '1.0',
+                    description: '尺码对应印花规格映射表',
+                    printSpecifications: []
+                };
+            }
+        }
+
+        /**
+         * 根据尺码匹配对应的sizeGroup
+         * @param {string} size - 尺码
+         * @returns {string} 匹配的sizeGroup
+         */
+        getSizeGroupBySize(size) {
+            if (!this.sizeToPrintSpecification || !this.sizeToPrintSpecification.printSpecifications) {
+                return '未知';
+            }
+
+            // 尝试精确匹配尺码
+            for (const spec of this.sizeToPrintSpecification.printSpecifications) {
+                if (spec.sizeArray && spec.sizeArray.includes(size)) {
+                    return spec.sizeGroup;
+                }
+            }
+
+            return '未知';
+        }
+
+        /**
+         * 处理含有"+"的印花编号，前一个根据尺码判断大小，后一个归为"Small"组
+         * @param {string} pattern - 印花编号
+         * @param {string} size - 尺码
+         * @returns {Array} 包含印花编号和对应sizeGroup的对象数组
+         */
+        processPatternWithPlus(pattern, size) {
+            const result = [];
+            const patterns = pattern.split('+');
+            
+            if (patterns.length > 0) {
+                // 第一个印花根据尺码判断大小
+                result.push({
+                    pattern: patterns[0].trim(),
+                    printSize: this.getSizeGroupBySize(size) || '未知'
+                });
+                
+                // 后续的印花都归为"Small"组
+                for (let i = 1; i < patterns.length; i++) {
+                    result.push({
+                        pattern: patterns[i].trim(),
+                        printSize: 'Small'
+                    });
+                }
+            }
+            
+            return result;
         }
 
         initializeEventListeners() {
@@ -571,7 +647,7 @@ if (!window.JITOrderSystem) {
                 totalItems: data.length,
                 totalQuantity: data.reduce((sum, item) => sum + (item.quantity || 0), 0),
                 skcCount: new Set(data.map(item => item.skc)).size,
-                patternCount: new Set(data.map(item => item.pattern)).size,
+                patternCount: 0, // 将在下面计算，统计不同印花大小的规格数量
                 sizeCount: new Set(data.map(item => item.size)).size,
 
                 skcSummary: {},
@@ -585,6 +661,32 @@ if (!window.JITOrderSystem) {
                 summary.patternSummary[item.pattern] = (summary.patternSummary[item.pattern] || 0) + (item.quantity || 0);
                 summary.sizeSummary[item.size] = (summary.sizeSummary[item.size] || 0) + (item.quantity || 0);
             });
+
+            // 计算不同印花大小的规格数量（印花编码+印花大小的组合数量）
+            const patternSizeCombinations = new Set();
+            data.forEach(item => {
+                let patternItems = [];
+                
+                // 检查印花编号是否含有"+"
+                if (item.pattern.includes('+')) {
+                    // 处理含有"+"的印花编号
+                    patternItems = this.processPatternWithPlus(item.pattern, item.size);
+                } else {
+                    // 普通印花编号
+                    patternItems.push({
+                        pattern: item.pattern,
+                        printSize: this.getSizeGroupBySize(item.size) || '未知'
+                    });
+                }
+                
+                // 为每个印花编码+印花大小组合添加到集合中
+                patternItems.forEach(patternItem => {
+                    patternSizeCombinations.add(`${patternItem.pattern}|${patternItem.printSize}`);
+                });
+            });
+            
+            // 更新印花种类数量为不同印花大小的规格数量
+            summary.patternCount = patternSizeCombinations.size;
 
             return summary;
         }
@@ -690,8 +792,8 @@ if (!window.JITOrderSystem) {
                 <thead>
                     <tr>
                         <th class="select "><input type="checkbox" id="selectAll" title="全选/取消全选"></th>
-                        <th>图片</th>
-                        <th>SKC</th>
+                        <th>款式图片</th>
+                        <th>款号skc</th>
                         <th>印花号</th>
                         <th>尺码</th>
                         <th>数量</th>
@@ -1158,17 +1260,17 @@ if (!window.JITOrderSystem) {
                 
                 // 第一行显示图片、SKC和合计数量，这些单元格需要合并
                 skcHtml += `<tr>
-                    <td rowspan="${sizeCount}" ${sizeCount > 1 ? 'class="merged-cell"' : ''}>
+                    <td rowspan="${sizeCount}" class="merged-cell">
                         ${group.imageUrl ? `<img src="${this.escapeHtml(group.imageUrl)}" height="${this.displayConfig.imageMaxHeight}" onerror="this.style.display='none'">` : '无'}
                     </td>
-                    <td rowspan="${sizeCount}" ${sizeCount > 1 ? 'class="merged-cell"' : ''}>${this.escapeHtml(skc)}</td>`;
+                    <td rowspan="${sizeCount}" class="merged-cell">${this.escapeHtml(skc)}</td>`;
                 
                 // 第一行的尺码和数量
                 const firstSize = group.sizes[0];
                 skcHtml += `
                     <td>${this.escapeHtml(firstSize.size)}</td>
                     <td>${firstSize.quantity}</td>
-                    <td rowspan="${sizeCount}" ${sizeCount > 1 ? 'class="merged-cell"' : ''}>${group.totalQuantity}</td>
+                    <td rowspan="${sizeCount}" class="merged-cell">${group.totalQuantity}</td>
                 </tr>`;
                 
                 // 后续行只显示尺码和数量
@@ -1184,41 +1286,50 @@ if (!window.JITOrderSystem) {
             skcHtml += `</tbody></table></div>
         </div>`;
 
-            // 烫画数量汇总 - 按印花大小显示数量，每个size:数量占一行
+            // 烫画数量汇总 - 按印花大小和数量分列显示
             let patternHtml = `
                 <div class="summary-container">
                     <div>
                         <table>
                             <thead>
                                 <tr>
-                                    <th>印花图片</th>
-                                    <th>印花编码</th>
-                                    <th>印花大小及数量</th>
-                                    <th>所需烫画数量</th>
-                                </tr>
+                                        <th>印花图片</th>
+                                        <th>印花编码</th>
+                                        <th>印花大小</th>
+                                        <th>数量</th>
+                                    </tr>
                             </thead>
                             <tbody>`;
 
-            // 按印花编码和SKC印花大小分组汇总
+            // 按印花编码和sizeGroup分组汇总
             const patternPrintSizeGroups = {};
             
             this.processedData.forEach(item => {
-                // 按印花编码分组，记录每个印花大小及其数量
-                if (!patternPrintSizeGroups[item.pattern]) {
-                    patternPrintSizeGroups[item.pattern] = {};
+                let patternItems = [];
+                
+                // 检查印花编号是否含有"+"
+                if (item.pattern.includes('+')) {
+                    // 处理含有"+"的印花编号
+                    patternItems = this.processPatternWithPlus(item.pattern, item.size);
+                } else {
+                    // 普通印花编号
+                    patternItems.push({
+                        pattern: item.pattern,
+                        printSize: this.getSizeGroupBySize(item.size) || '未知'
+                    });
                 }
                 
-                // 按印花编码分组，记录每个印花大小及其数量
-                if (!patternPrintSizeGroups[item.pattern]) {
-                    patternPrintSizeGroups[item.pattern] = {};
-                }
-                
-                // 使用SKC印花映射表中的印花大小
-                const printSize = item.printSize || '未知';
-                if (!patternPrintSizeGroups[item.pattern][printSize]) {
-                    patternPrintSizeGroups[item.pattern][printSize] = 0;
-                }
-                patternPrintSizeGroups[item.pattern][printSize] += item.quantity || 0;
+                // 按处理后的印花编号和sizeGroup分组统计数量
+                patternItems.forEach(patternItem => {
+                    if (!patternPrintSizeGroups[patternItem.pattern]) {
+                        patternPrintSizeGroups[patternItem.pattern] = {};
+                    }
+                    
+                    if (!patternPrintSizeGroups[patternItem.pattern][patternItem.printSize]) {
+                        patternPrintSizeGroups[patternItem.pattern][patternItem.printSize] = 0;
+                    }
+                    patternPrintSizeGroups[patternItem.pattern][patternItem.printSize] += item.quantity || 0;
+                });
             });
 
             // 处理数据，生成按印花大小分组的结果
@@ -1241,7 +1352,7 @@ if (!window.JITOrderSystem) {
                 return a.printSize.localeCompare(b.printSize);
             });
 
-            // 生成显示文本，按要求的格式：每个size:数量占一行
+            // 生成显示文本，按要求的格式：每个size:quantity占一行
             const patternDisplayMap = {};
             finalPatternGroups.forEach(group => {
                 if (!patternDisplayMap[group.pattern]) {
@@ -1258,13 +1369,6 @@ if (!window.JITOrderSystem) {
                 const totalQuantity = finalPatternGroups
                     .filter(item => item.pattern === pattern)
                     .reduce((sum, item) => sum + item.quantity, 0);
-                
-                // 构建每个size:数量占一行的HTML，使用.size-container和size-chip样式
-                let sizeQuantityHtml = '<div class="size-container">';
-                displayItems.forEach(item => {
-                    sizeQuantityHtml += `<div class="size-chip"><span class="size-text">${this.escapeHtml(item.printSize)}</span>:<span class="quantity-text">${item.quantity}</span></div>`;
-                });
-                sizeQuantityHtml += '</div>';
                 
                 // 处理多个印花编码的情况，支持使用+连接的多个值
                 let imagesHtml = '';
@@ -1287,12 +1391,21 @@ if (!window.JITOrderSystem) {
                     imagesHtml = '无';
                 }
                 
+                // 第一行显示印花信息、编码、大小和数量
                 patternHtml += `<tr>
-                    <td style="display: flex; gap: 8px; align-items: center;border:1px solid #747474;">${imagesHtml}</td>
-                    <td>${this.escapeHtml(pattern)}</td>
-                    <td>${sizeQuantityHtml}</td>
-                    <td>${totalQuantity}</td>
+                    <td rowspan="${displayItems.length}" class="merged-cell">${imagesHtml}</td>
+                    <td rowspan="${displayItems.length}" class="merged-cell">${this.escapeHtml(pattern)}</td> 
+                    <td>${this.escapeHtml(displayItems[0].printSize)}</td> 
+                    <td>${displayItems[0].quantity}</td>
                 </tr>`;
+                
+                // 后续行只显示印花大小和数量
+                for (let i = 1; i < displayItems.length; i++) {
+                    patternHtml += `<tr>
+                        <td>${this.escapeHtml(displayItems[i].printSize)}</td>
+                        <td>${displayItems[i].quantity}</td>
+                    </tr>`;
+                }
             });
 
             patternHtml += `</tbody></table></div>

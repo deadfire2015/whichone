@@ -8,9 +8,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="xlsx.full.min.js"></script>
     <link rel="stylesheet" href="style.css">
-    <style>
-        
-    </style>
     <script src="imagePreview.js"></script>
     <script src="printUtils.js"></script>
     <script src="mappingUploader.js"></script>
@@ -28,7 +25,10 @@
                     <div class="tab-group">
                         <button class="tab-btn active" data-tab="data">JIT生产明细</button>
                         <button class="tab-btn" data-tab="skc">空版检货汇总</button>
-                        <button class="tab-btn" data-tab="pattern">烫画数量汇总</button>
+                        <button class="tab-btn" data-tab="pattern">烫画数量汇总<span class="info-icon" data-title="Small(小规格):套装中小图;
+Normal(正常规格): 包含0~6Y尺码;
+Medium(中等规格):包含7~16Y尺码;
+Large(大规格):包含成人码;">?</span></button>
                     </div>
                     <div class="button-group">
                         <button class="button download-tab-btn" id="downloadBtn">下载当前表</button>

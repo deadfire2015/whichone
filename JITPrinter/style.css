@@ -415,6 +415,54 @@ tr:nth-child(even) {
     box-shadow: 0 20px 20px -16px rgba(40, 68, 255, 0.1);
 }
 
+/* 信息图标样式 */
+.info-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: #4a90e2;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 16px;
+    font-size: 12px;
+    margin-left: 5px;
+    cursor: help;
+    position: relative;
+}
+
+.info-icon:hover::after {
+    content: attr(data-title);
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    white-space: pre-line;
+    font-size: 12px;
+    z-index: 1000;
+    min-width: 200px;
+    max-width: 300px;
+    word-wrap: break-word;
+    white-space: pre-line;
+    margin-top: 5px;
+}
+
+.info-icon:hover::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-bottom-color: #333;
+    margin-top: -5px;
+    z-index: 1001;
+}
+
 /* 打印/下载按钮 */
 .print-tab-btn,
 .download-tab-btn {
@@ -597,6 +645,22 @@ td.select{
     height: auto !important;
     background-color: transparent !important;
     font-weight: normal !important;
+}
+
+/* 确保烫画数量汇总表的印花大小列在预览和打印时都不应用merged-cell样式 */
+#patternSummary table td:nth-child(3) {
+    height: auto !important;
+    background-color: transparent !important;
+    font-weight: normal !important;
+}
+
+/* 打印时，确保烫画数量汇总表的所有单元格都不应用merged-cell样式 */
+@media print {
+    #patternSummary table td {
+        height: auto !important;
+        background-color: transparent !important;
+        font-weight: normal !important;
+    }
 }
 
 .hidden-cell {
