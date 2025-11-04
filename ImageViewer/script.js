@@ -234,68 +234,22 @@ class ImageSizeViewer {
     }
     
     reset() {
-        this.previewImage.src = '';
-        this.previewImage.style.width = '';
-        this.previewImage.style.height = '';
-        this.fileName.textContent = '-';
-        this.originalSize.textContent = '-';
-        this.aspectRatioDisplay.textContent = '-';
-        this.widthInput.value = '';
-        this.heightInput.value = '';
-        
-        this.imageContainer.style.display = 'none';
-        this.dropZone.style.display = 'block';
-        this.fileInput.value = '';
-        
-        this.originalWidth = 0;
-        this.originalHeight = 0;
-        this.aspectRatio = 0;
-        this.currentFile = null;
+        // 直接触发文件选择，覆盖当前图片
+        this.fileInput.click();
     }
-}
-
-// 添加重置功能
-function addResetButton() {
-    const resetBtn = document.createElement('button');
-    resetBtn.textContent = '重新选择图片';
-    resetBtn.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 10px 20px;
-        background: #ff6b6b;
-        color: white;
-        border: none;
-        border-radius: 25px;
-        cursor: pointer;
-        font-size: 14px;
-        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-        transition: all 0.3s ease;
-        z-index: 1000;
-    `;
-    
-    resetBtn.addEventListener('mouseenter', () => {
-        resetBtn.style.transform = 'translateY(-2px)';
-        resetBtn.style.boxShadow = '0 6px 20px rgba(255, 107, 107, 0.4)';
-    });
-    
-    resetBtn.addEventListener('mouseleave', () => {
-        resetBtn.style.transform = 'translateY(0)';
-        resetBtn.style.boxShadow = '0 4px 15px rgba(255, 107, 107, 0.3)';
-    });
-    
-    document.body.appendChild(resetBtn);
-    return resetBtn;
 }
 
 // 初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     const viewer = new ImageSizeViewer();
-    const resetBtn = addResetButton();
     
-    resetBtn.addEventListener('click', () => {
-        viewer.reset();
-    });
+    // 获取内联重置按钮并添加事件
+    const resetBtnInline = document.getElementById('resetBtnInline');
+    if (resetBtnInline) {
+        resetBtnInline.addEventListener('click', () => {
+            viewer.reset();
+        });
+    }
 });
 
 // 添加键盘快捷键支持
