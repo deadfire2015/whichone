@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片尺寸查看器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>图片尺寸查看器</h1>
+        
+        <!-- 拖拽区域 -->
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-content">
+                <div class="upload-icon">📁</div>
+                <p>拖拽图片文件到此处</p>
+                <p class="hint">或点击选择文件</p>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        </div>
+        
+        <!-- 图片显示和信息区域 -->
+        <div class="image-container" id="imageContainer" style="display: none;">
+            <div class="image-wrapper">
+                <img id="previewImage" alt="预览图片">
+            </div>
+            
+            <div class="info-panel">
+                <h3>图片信息</h3>
+                <div class="info-item">
+                    <label>文件名:</label>
+                    <span id="fileName">-</span>
+                </div>
+                <div class="info-item">
+                    <label>原始尺寸:</label>
+                    <span id="originalSize">-</span>
+                </div>
+                
+                <div class="size-controls">
+                    <h4>调整尺寸</h4>
+                    <div class="input-group">
+                        <label for="widthInput">宽度:</label>
+                        <input type="text" id="widthInput" pattern="[0-9]+(\\.[0-9]{1,2})?" title="请输入数字，最多两位小数">
+                        <span>cm</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="heightInput">高度:</label>
+                        <input type="text" id="heightInput" pattern="[0-9]+(\\.[0-9]{1,2})?" title="请输入数字，最多两位小数">
+                        <span>cm</span>
+                    </div>
+                    <div class="ratio-info">
+                        <span>宽高比: <span id="aspectRatio">-</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 加载状态 -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>正在加载图片...</p>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
