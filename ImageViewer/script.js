@@ -42,6 +42,14 @@ class ImageSizeViewer {
         // 输入框事件
         this.widthInput.addEventListener('input', () => this.handleWidthChange());
         this.heightInput.addEventListener('input', () => this.handleHeightChange());
+        
+        // 输入验证
+        this.widthInput.addEventListener('blur', () => this.validateInput(this.widthInput));
+        this.heightInput.addEventListener('blur', () => this.validateInput(this.heightInput));
+        
+        // 按键限制，只允许数字和小数点
+        this.widthInput.addEventListener('keypress', (e) => this.restrictInput(e));
+        this.heightInput.addEventListener('keypress', (e) => this.restrictInput(e));
     }
     
     handleDragOver(e) {
@@ -116,7 +124,7 @@ class ImageSizeViewer {
         this.fileName.textContent = this.currentFile.name;
         
         // 显示原始尺寸
-        this.originalSize.textContent = `${this.originalWidth} × ${this.originalHeight}`;
+        this.originalSize.textContent = `${this.originalWidth.toFixed(2)} × ${this.originalHeight.toFixed(2)}`;
         
         // 显示宽高比
         this.aspectRatioDisplay.textContent = this.aspectRatio.toFixed(4);
@@ -133,9 +141,9 @@ class ImageSizeViewer {
     handleWidthChange() {
         clearTimeout(this.resizeTimer);
         this.resizeTimer = setTimeout(() => {
-            const newWidth = parseInt(this.widthInput.value);
+            const newWidth = parseFloat(this.widthInput.value);
             if (newWidth && newWidth > 0) {
-                const newHeight = Math.round(newWidth / this.aspectRatio);
+                const newHeight = parseFloat((newWidth / this.aspectRatio).toFixed(2));
                 this.heightInput.value = newHeight;
                 this.updateImageSize(newWidth, newHeight);
             }
@@ -145,9 +153,9 @@ class ImageSizeViewer {
     handleHeightChange() {
         clearTimeout(this.resizeTimer);
         this.resizeTimer = setTimeout(() => {
-            const newHeight = parseInt(this.heightInput.value);
+            const newHeight = parseFloat(this.heightInput.value);
             if (newHeight && newHeight > 0) {
-                const newWidth = Math.round(newHeight * this.aspectRatio);
+                const newWidth = parseFloat((newHeight * this.aspectRatio).toFixed(2));
                 this.widthInput.value = newWidth;
                 this.updateImageSize(newWidth, newHeight);
             }
@@ -157,6 +165,57 @@ class ImageSizeViewer {
     updateImageSize(width, height) {
         this.previewImage.style.width = width + 'px';
         this.previewImage.style.height = height + 'px';
+    }
+    
+    validateInput(input) {
+        let value = input.value.trim();
+        
+        // 如果为空，保持原值
+        if (value === '') return;
+        
+        // 验证数字格式（最多两位小数）
+        const regex = /^\d+(\.\d{0,2})?$/;
+        if (!regex.test(value)) {
+            // 格式不正确，恢复为上一个有效值或清空
+            input.value = input.dataset.lastValidValue || '';
+            return;
+        }
+        
+        // 确保最多两位小数
+        const numValue = parseFloat(value);
+        if (numValue.toString() !== value) {
+            input.value = numValue.toFixed(2);
+        }
+        
+        // 保存当前有效值
+        input.dataset.lastValidValue = input.value;
+        
+        // 确保最小值
+        if (numValue <= 0) {
+            input.value = '0.01';
+            input.dataset.lastValidValue = '0.01';
+        }
+    }
+    
+    restrictInput(e) {
+        const charCode = e.which ? e.which : e.keyCode;
+        const value = e.target.value;
+        
+        // 允许数字
+        if (charCode >= 48 && charCode <= 57) return true;
+        
+        // 允许小数点（只能有一个）
+        if (charCode === 46) {
+            if (value.indexOf('.') === -1) return true;
+        }
+        
+        // 允许退格、删除、左右箭头、Tab键
+        if (charCode === 8 || charCode === 46 || 
+            charCode === 37 || charCode === 39 || 
+            charCode === 9) return true;
+        
+        e.preventDefault();
+        return false;
     }
     
     showLoading() {
