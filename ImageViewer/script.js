@@ -155,6 +155,11 @@ class ImageSizeViewer {
             const imageUrl = URL.createObjectURL(file);
             
             img.onload = () => {
+                const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+                
+                // 在导入时检测印花编号是否包含非法字符
+                const hasInvalidChars = /[\s\-_]/.test(fileNameWithoutExt);
+                
                 const imageData = {
                     id: Date.now() + Math.random(),
                     file: file,
@@ -164,6 +169,8 @@ class ImageSizeViewer {
                     originalHeight: img.naturalHeight,
                     aspectRatio: img.naturalWidth / img.naturalHeight,
                     printName: '', // 印花名称（每个图片一个）
+                    printCode: fileNameWithoutExt, // 印花编号（基于文件名）
+                    hasInvalidPrintCode: hasInvalidChars, // 标记是否包含非法字符
                     sizeGroups: [{
                         id: Date.now() + Math.random(),
                         customWidth: img.naturalWidth,
@@ -226,7 +233,9 @@ class ImageSizeViewer {
                     <td class="table-image-cell" rowspan="${image.sizeGroups.length}">
                         <img class="table-image-preview" src="${image.url}" alt="${image.name}">
                     </td>
-                    <td class="table-print-code-cell" rowspan="${image.sizeGroups.length}" data-fullname="${fileNameWithoutExt}">${fileNameWithoutExt}</td>
+                    <td class="table-print-code-cell" rowspan="${image.sizeGroups.length}">
+                        <input type="text" class="table-print-code-input ${this.validatePrintCode(image.printCode || fileNameWithoutExt) ? '' : 'error'}" value="${image.printCode || fileNameWithoutExt}" placeholder="印花编号" data-index="${index}">
+                    </td>
                     <td class="table-print-name-cell" rowspan="${image.sizeGroups.length}">
                         <input type="text" class="table-print-name-input" value="${image.printName || ''}" placeholder="印花名称" data-index="${index}">
                     </td>
@@ -313,6 +322,7 @@ class ImageSizeViewer {
         const widthInput = row.querySelector('.table-size-input.width-input');
         const heightInput = row.querySelector('.table-size-input.height-input');
         const printNameInput = row.querySelector('.table-print-name-input');
+        const printCodeInput = row.querySelector('.table-print-code-input');
         const sizeTypeSelect = row.querySelector('.table-position-select');
         const addSizeBtn = row.querySelector('.table-add-btn');
         const deleteBtn = row.querySelector('.table-delete-btn');
@@ -327,6 +337,12 @@ class ImageSizeViewer {
         if (heightInput) {
             heightInput.addEventListener('input', (e) => this.handleInlineHeightChange(e, index));
             heightInput.addEventListener('keypress', (e) => this.restrictInput(e));
+        }
+        
+        // 绑定印花编号输入事件
+        if (printCodeInput) {
+            printCodeInput.addEventListener('input', (e) => this.handlePrintCodeChange(e, index));
+            printCodeInput.addEventListener('keypress', (e) => this.restrictPrintCodeInput(e));
         }
         
         // 绑定印花名称输入事件
@@ -380,7 +396,8 @@ class ImageSizeViewer {
                     !e.target.classList.contains('table-delete-btn') &&
                     !e.target.classList.contains('table-remove-btn') &&
                     !e.target.classList.contains('table-position-select') &&
-                    !e.target.classList.contains('table-print-name-input')) {
+                    !e.target.classList.contains('table-print-name-input') &&
+                    !e.target.classList.contains('table-print-code-input')) {
                     this.showImagePreview(image);
                 }
             });
@@ -393,6 +410,31 @@ class ImageSizeViewer {
         
         // 更新印花名称
         image.printName = newPrintName;
+    }
+    
+    handlePrintCodeChange(e, index) {
+        const newPrintCode = e.target.value;
+        const image = this.images[index];
+        
+        // 验证印花编号内容
+        const isValid = this.validatePrintCode(newPrintCode);
+        
+        // 更新错误状态
+        if (isValid) {
+            e.target.classList.remove('error');
+            // 更新印花编号和错误标记
+            image.printCode = newPrintCode;
+            image.hasInvalidPrintCode = false;
+        } else {
+            e.target.classList.add('error');
+            image.hasInvalidPrintCode = true;
+        }
+    }
+    
+    validatePrintCode(printCode) {
+        // 检查是否包含空格、-、_等非法字符
+        const invalidChars = /[\s\-_]/;
+        return !invalidChars.test(printCode);
     }
     
     handleInlineWidthChange(e, index) {
@@ -551,6 +593,26 @@ class ImageSizeViewer {
         if (charCode === 46 && value.indexOf('.') === -1) return true;
         if (charCode === 8 || charCode === 46 || charCode === 37 || charCode === 39 || charCode === 9) return true;
         
+        e.preventDefault();
+        return false;
+    }
+    
+    restrictPrintCodeInput(e) {
+        const charCode = e.which ? e.which : e.keyCode;
+        
+        // 允许字母、数字、退格、删除、方向键、Tab键
+        if ((charCode >= 65 && charCode <= 90) || // A-Z
+            (charCode >= 97 && charCode <= 122) || // a-z
+            (charCode >= 48 && charCode <= 57) || // 0-9
+            charCode === 8 || // 退格
+            charCode === 46 || // 删除
+            charCode === 37 || // 左箭头
+            charCode === 39 || // 右箭头
+            charCode === 9) {  // Tab
+            return true;
+        }
+        
+        // 阻止空格、-、_等非法字符
         e.preventDefault();
         return false;
     }
@@ -895,9 +957,16 @@ class ImageSizeViewer {
         
         // 在导出时进行位置和尺寸检测
         let hasErrors = false;
+        let hasInvalidPrintCodes = false;
         
         // 检查所有尺寸组
         this.images.forEach((image, imageIndex) => {
+            // 检查印花编号是否包含非法字符
+            if (image.hasInvalidPrintCode) {
+                hasInvalidPrintCodes = true;
+                console.log('Invalid print code found for image', imageIndex, ':', image.printCode);
+            }
+            
             image.sizeGroups.forEach((sizeGroup, groupIndex) => {
                 const validation = this.validateSizeGroup(imageIndex, groupIndex);
                 
@@ -923,6 +992,12 @@ class ImageSizeViewer {
                 });
             });
         });
+        
+        if (hasInvalidPrintCodes) {
+            // 如果有印花编号包含非法字符，不让下载，弹出toast提示
+            this.showToast('印花编号包含非法字符（空格、-、_等），请修正后再下载', 'error');
+            return; // 直接返回，不继续导出
+        }
         
         if (hasErrors) {
             // 如果有检测不合格，不让下载，弹出toast提示

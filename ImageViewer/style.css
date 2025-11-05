@@ -336,7 +336,7 @@ h1 {
 
 /* 左侧图片预览区域 */
 .preview-section {
-    flex: 4;
+    flex: 3;
     display: flex;
     flex-direction: column;
     background: rgba(255, 255, 255, 0.4);
@@ -398,7 +398,7 @@ h1 {
 
 /* 右侧图片列表区域 */
 .list-section {
-    flex: 6;
+    flex: 7;
     display: flex;
     flex-direction: column;
     background: rgba(255, 255, 255, 0.95);
@@ -707,7 +707,7 @@ h1 {
 /* 表格布局样式 */
 .table-container {
     width: 100%;
-    overflow-x: auto;
+    overflow-x: hidden;
     max-height: 76vh;
     position: relative;
     border: 1px solid #e2e8f0;
@@ -749,7 +749,7 @@ h1 {
 
 /* 操作列固定宽度 */
 .image-table th:nth-child(7) {
-    width: 120px;
+    width: 100px;
 }
 
 /* 其余列平分剩余宽度 */
@@ -767,9 +767,7 @@ h1 {
 
 .image-table td {
     padding: 6px;
-
     vertical-align: middle;
-    overflow: hidden;
     text-overflow: ellipsis;
 }
 
@@ -819,27 +817,10 @@ h1 {
     word-wrap: break-word;
     line-height: 1.2;
     position: relative;
-    cursor: help;
     padding: 4px 6px;
 }
 
-.table-print-code-cell:hover::after {
-    content: attr(data-fullname);
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: var(--bg-white);
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    z-index: 1000;
-    pointer-events: none;
-    margin-top: 5px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
+
 
 .table-ratio-cell {
     font-family: 'Courier New', monospace;
@@ -852,7 +833,8 @@ h1 {
 
 .table-position-select,
 .table-size-input,
-.table-print-name-input {
+.table-print-name-input,
+.table-print-code-input {
     width: 100%;
     padding: 10px 12px;
     border: 1.5px solid var(--border-color);
