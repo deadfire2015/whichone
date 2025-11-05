@@ -15,43 +15,61 @@
             <div class="drop-content">
                 <div class="upload-icon">📁</div>
                 <p>拖拽图片文件到此处</p>
-                <p class="hint">或点击选择文件</p>
+                <p class="hint">或点击选择文件（支持多选）</p>
             </div>
-            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+            <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
         </div>
 
-        <!-- 图片显示和信息区域 -->
-        <div class="image-container" id="imageContainer" style="display: none;">
-            <div class="image-wrapper">
-                <img id="previewImage" alt="预览图片">
+        <!-- 主内容区域 - 左右布局 -->
+        <div class="main-content" id="mainContent" style="display: none;">
+            <!-- 左侧图片预览区域 -->
+            <div class="preview-section">
+                <div class="preview-wrapper">
+                    <img id="previewImage" alt="预览图片">
+                </div>
+                <div class="preview-info" id="previewInfo">
+                    <div class="info-item">
+                        <span class="info-label">印花比例:</span>
+                        <span class="info-value" id="previewRatio">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">实际宽度:</span>
+                        <span class="info-value" id="previewWidth">- cm</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">实际高度:</span>
+                        <span class="info-value" id="previewHeight">- cm</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="info-panel">
-                <h3>图片信息(请根据荧光绿色检查图片是否有瑕疵)</h3>
-                <div class="info-item">
-                    <label>文件名:</label>
-                    <span id="fileName">-</span>
+            <!-- 右侧图片列表区域 -->
+            <div class="list-section">
+               
+                <div class="table-container">
+                    <table class="image-table">
+                        <thead class="table-header">
+                            <tr>
+                                <th>图片</th>
+                                <th>印花编号</th>
+                                <th>印花名称</th>
+                                <th>印花位置</th>
+                                <th>宽(cm)</th>
+                                <th>高(cm)</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="imageList">
+                            <!-- 图片列表将在这里动态生成 -->
+                        </tbody>
+                    </table>
                 </div>
-                <div class="info-item">
-                    <label>原始尺寸:</label>
-                    <span id="originalSize">-</span>
-                </div>
-                <div class="ratio-info">
-                    <span>宽高比: <span id="aspectRatio">-</span></span>
-                </div>
-                <div class="size-controls">
-                    <h4>调整尺寸</h4>
-                    <div class="input-group">
-                        <label for="widthInput">宽度:</label>
-                        <input type="text" id="widthInput" pattern="[0-9]+(\\.[0-9]{1,2})?" title="请输入数字，最多两位小数">
-                        <span>cm</span>
+                 <div class="list-header">
+                    <div class="header-buttons">
+                        <button class="batch-set-btn" id="batchSetBtn">批量设置尺寸</button>
+                        <button class="continue-add-btn" id="continueAddBtn">添加印花</button>
+                        <button class="export-btn" id="exportBtn">导出表格</button>
                     </div>
-                    <div class="input-group">
-                        <label for="heightInput">高度:</label>
-                        <input type="text" id="heightInput" pattern="[0-9]+(\\.[0-9]{1,2})?" title="请输入数字，最多两位小数">
-                        <span>cm</span>
-                    </div>
-                    <button class="reset-btn-inline" id="resetBtnInline">重新选择图片</button>
                 </div>
             </div>
         </div>
@@ -61,11 +79,62 @@
             <div class="spinner"></div>
             <p>正在加载图片...</p>
         </div>
+        
+        <!-- Toast提示容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- 批量设置弹窗 -->
+    <div class="batch-set-modal" id="batchSetModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>批量设置部位尺寸</h3>
+                <button class="modal-close" id="batchSetClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="batch-set-form">
+                    <div class="form-group">
+                        <label for="batchPosition">印花位置：</label>
+                        <select id="batchPosition" class="batch-position-select">
+                            <option value="前幅居中">前幅居中</option>
+                            <option value="后幅居中">后幅居中</option>
+                            <option value="前胸">前胸</option>
+                            <option value="领口">领口</option>
+                            <option value="袖口">袖口</option>
+                            <option value="裤脚">裤脚</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>设置方式：</label>
+                        <div class="dimension-options">
+                            <label class="radio-option">
+                                <input type="radio" name="dimensionType" value="width" checked>
+                                <span>设置宽度</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="dimensionType" value="height">
+                                <span>设置高度</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="batchSize">尺寸值(cm)：</label>
+                        <input type="number" id="batchSize" class="batch-size-input" min="0.1" step="0.1" placeholder="请输入尺寸">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-cancel" id="batchSetCancel">取消</button>
+                <button class="modal-confirm" id="batchSetConfirm">确定</button>
+            </div>
+        </div>
     </div>
-    <!-- <div class="dycjbg"> -->
-    <img class="dycjbg" src="dybg.png" alt="">
-    <!-- </div> -->
-    <script src="script.js"></script>
+</div>
+<!-- <div class="dycjbg"> -->
+<img class="dycjbg" src="dybg.png" alt="">
+<!-- </div> -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="script.js"></script>
 </body>
 
 </html>
