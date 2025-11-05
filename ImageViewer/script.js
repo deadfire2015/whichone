@@ -1021,7 +1021,7 @@ class ImageSizeViewer {
         this.images.forEach(image => {
             const sizeCount = image.sizeGroups.length;
             const imageName = image.name;
-            const printCode = image.name.replace(/\.\w+$/, '') || '';
+            const printCode = image.printCode || image.name.replace(/\.\w+$/, '') || '';
             const printName = image.printName || '';
             
             // 填充每个尺寸组的数据
