@@ -1,0 +1,25 @@
+{
+  "users": [
+    {
+      "username": "古清华",
+      "nameEN": "Grace",
+      "secretKey": "gqh",
+      "avatar": "imgs/Grace.png",
+      "phone": "+86 18148792046"
+    },
+    {
+      "username": "钟美玲",
+      "nameEN": "Merriny",
+      "secretKey": "zml",
+      "avatar": "imgs/Merriny.png",
+      "phone": "+86 18148792046"
+    },
+    {
+      "username": "陈思敏",
+      "nameEN": "Selena",
+      "secretKey": "csm",
+      "avatar": "imgs/Selena.png",
+      "phone": "+86 18148792046"
+    }
+  ]
+}
