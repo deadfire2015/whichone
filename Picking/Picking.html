@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catpapa Apparel Style Picker</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <!-- 视频背景 -->
+    <video id="video-background" autoplay muted loop>
+        <source src="imgs/bg.mp4" type="video/mp4">
+        您的浏览器不支持视频背景。
+    </video>
+    
+    <!-- 登录界面 -->
+    <div id="login-section">
+        <div class="login-container">
+            <h1 class="login-title">Catpapa</h1>
+            <p class="login-subtitle">Apparel Style Picker</p>
+            <input type="password" id="secret-key" class="login-input" placeholder="Please enter your access key" autocomplete="off">
+            <button id="login-btn" class="login-btn">Login to System</button>
+            <div id="login-error" class="error-message" style="display: none;">密钥错误，请重新输入</div>
+        </div>
+    </div>
+
+    <!-- 主应用界面 -->
+    <div id="main-app" style="display: none;">
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+        <!-- 欢迎背景区域 -->
+        <div id="welcome" class="welcome-section">
+            <div class="welcome-content">
+                <h1 class="welcome-title">Welcome to Catpapa</h1>
+                <p class="welcome-subtitle">Apparel Style Picker</p>
+                <button id="start-upload" class="welcome-btn">Import Inventory Data</button>
+            </div>
+        </div>
+
+        <!-- 数据导入弹窗 -->
+        <div id="upload-modal" class="upload-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title-container">
+                        <h3 class="modal-title">导入货盘数据</h3>
+                        <div class="modal-subtitle">可同时导入尾货和正价两个Excel文件</div>
+                    </div>
+                    <button id="close-modal" class="modal-close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="upload-options">
+                        <div class="upload-option-group">
+                            <button type="button" id="file-btn-clearance" class="file-btn" data-type="clearance">选择尾货Excel文件</button>
+                            <input type="file" id="file-input-clearance" accept=".xlsx,.xls" style="display: none;">
+                        </div>
+                        <div class="upload-option-group">
+                            <button type="button" id="file-btn-regular" class="file-btn" data-type="regular">选择正价Excel文件</button>
+                            <input type="file" id="file-input-regular" accept=".xlsx,.xls" style="display: none;">
+                        </div>
+                    </div>
+                    <div class="file-info-container">
+                        <div id="file-info-clearance" class="file-info">未选择尾货文件</div>
+                        <div id="file-info-regular" class="file-info">未选择正价文件</div>
+                    </div>
+                    <div class="upload-actions">
+                        <button id="reset-upload" class="reset-btn">重置选择</button>
+                        <button id="parse-data" class="parse-btn" disabled>解析数据</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 筛选区域 -->
+        <div id="filter" class="filter-section" style="display: none;">
+            <div class="filter-header">
+                <h2>筛选条件</h2>
+                <div id="file-info" class="file-info"></div>
+                <button id="reset-filters" class="reset-btn">重置筛选</button>
+            </div>
+            
+            <div class="filter-grid">
+                <!-- 库存数量筛选 -->
+                <div class="filter-group">
+                    <label class="filter-label">库存数量</label>
+                    <div class="range-inputs">
+                        <input type="number" id="filter-stock-min" placeholder="最小库存" class="filter-input">
+                        <span>至</span>
+                        <input type="number" id="filter-stock-max" placeholder="最大库存" class="filter-input">
+                    </div>
+                </div>
+                
+                <!-- 尺码筛选 -->
+                <div class="filter-group">
+                    <label class="filter-label">尺码</label>
+                    <div id="filter-sizes" class="checkbox-group">
+                        <!-- 尺码选项将通过JS动态生成 -->
+                    </div>
+                </div>
+                
+                <!-- 童装/成人装筛选 -->
+                <div class="filter-group">
+                    <label class="filter-label">童装/成人装</label>
+                    <div id="filter-age" class="checkbox-group">
+                        <!-- 选项将通过JS动态生成 -->
+                    </div>
+                </div>
+                
+                <!-- 性别筛选 -->
+                <div class="filter-group">
+                    <label class="filter-label">性别</label>
+                    <div id="filter-gender" class="checkbox-group">
+                        <!-- 选项将通过JS动态生成 -->
+                    </div>
+                </div>
+                
+                <!-- 季节筛选 -->
+                <div class="filter-group">
+                    <label class="filter-label">季节</label>
+                    <div id="filter-season" class="checkbox-group">
+                        <!-- 选项将通过JS动态生成 -->
+                    </div>
+                </div>
+                
+                <!-- 商品分类筛选 -->
+                <div class="filter-group">
+                    <label class="filter-label">商品分类</label>
+                    <div id="filter-category" class="checkbox-group">
+                        <!-- 选项将通过JS动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 商品展示区域 -->
+        <div id="products" class="products-section" style="display: none;">
+            <div id="product-grid" class="products-grid">
+                <!-- 商品卡片将通过JS动态生成 -->
+            </div>
+        </div>
+
+
+
+        <!-- 底部固定导航栏 -->
+        <div class="bottom-nav">
+            <!-- 搜索/筛选按钮 -->
+            <div class="nav-item" id="nav-search" data-section="search">
+                <div class="nav-icon">
+                    <img src="imgs/search.png" alt="搜索" class="nav-icon-img">
+                </div>
+            </div>
+            <!-- 购物车按钮 -->
+            <div class="nav-item" id="nav-wishlist" data-section="wishlist">
+                <div class="nav-icon">
+                    <img src="imgs/shop.png" alt="购物车" class="nav-icon-img">
+                    <span class="wishlist-badge" style="display: none;">0</span>
+                </div>
+            </div>
+            <!-- 我的按钮 -->
+            <div class="nav-item" id="nav-user" data-section="user">
+                <div class="nav-icon">
+                    <img src="imgs/Selena.png" alt="用户头像" class="user-avatar-small">
+                </div>
+            </div>
+        </div>
+
+        <!-- 移动端筛选弹窗 -->
+        <div id="mobile-filter-modal" class="mobile-filter-modal" style="display: none;">
+            <div class="mobile-filter-content">
+                <div class="mobile-filter-header">
+                    <h3>筛选条件</h3>
+                    <button class="mobile-filter-close">×</button>
+                </div>
+                <div class="mobile-filter-body">
+                    
+                    <!-- 库存范围筛选 -->
+                    <div class="mobile-filter-group">
+                        <label class="filter-label">库存数量</label>
+                        <div class="range-inputs">
+                            <input type="number" id="mobile-filter-stock-min" placeholder="最小库存" class="filter-input">
+                            <span>至</span>
+                            <input type="number" id="mobile-filter-stock-max" placeholder="最大库存" class="filter-input">
+                        </div>
+                    </div>
+                    
+                    <!-- 尺码筛选 -->
+                    <div class="mobile-filter-group">
+                        <label class="filter-label">尺码</label>
+                        <div id="mobile-filter-sizes" class="checkbox-group mobile-checkbox-group">
+                            <!-- 尺码选项将通过JS动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 童装/成人装筛选 -->
+                    <div class="mobile-filter-group">
+                        <label class="filter-label">童装/成人装</label>
+                        <div id="mobile-filter-age" class="checkbox-group mobile-checkbox-group">
+                            <!-- 选项将通过JS动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 性别筛选 -->
+                    <div class="mobile-filter-group">
+                        <label class="filter-label">性别</label>
+                        <div id="mobile-filter-gender" class="checkbox-group mobile-checkbox-group">
+                            <!-- 选项将通过JS动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 季节筛选 -->
+                    <div class="mobile-filter-group">
+                        <label class="filter-label">季节</label>
+                        <div id="mobile-filter-season" class="checkbox-group mobile-checkbox-group">
+                            <!-- 选项将通过JS动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 商品分类筛选 -->
+                    <div class="mobile-filter-group">
+                        <label class="filter-label">商品分类</label>
+                        <div id="mobile-filter-category" class="checkbox-group mobile-checkbox-group">
+                            <!-- 选项将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                <div class="mobile-filter-actions">
+                    <button class="mobile-filter-reset reset-btn">重置筛选</button>
+                    <button class="mobile-filter-apply upload-btn">应用筛选</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 脚本引入 -->
+    <script src="js/jquery-3.7.1.min.js"></script>
+    <script src="js/xlsx.full.min.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/login.js"></script>
+    <script src="js/modal.js"></script>
+    <script src="js/upload.js"></script>
+    <script src="js/filter.js"></script>
+    <script src="js/products.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/wishlist.js"></script>
+    <script src="test-data.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- 初始化脚本 -->
+    <script>
+        $(document).ready(function() {
+            // 初始化登录系统
+            LoginModule.init().then(() => {
+                // 登录成功后初始化其他模块
+                ModalModule.init();
+                
+                // 如果已经登录，初始化应用
+                if ($('#main-app').is(':visible')) {
+                    if (typeof App !== 'undefined') {
+                        App.init();
+                    }
+                }
+            }).catch(error => {
+                console.error('初始化失败:', error);
+            });
+        });
+    </script>
+</body>
+</html>
