@@ -148,12 +148,22 @@
                 <div class="card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path
-                            d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                        <path d="M0 0h24v24H0z" fill="none" />
+                            d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 0h-4V4h4v2z" />
                     </svg>
                 </div>
                 <h2>图片查看器</h2>
                 <p>用于查看图片尺寸,并展示等比缩放后的长宽。</p>
+            </div>
+             <!-- 选款系统卡片 -->
+            <div class="card" id="Picking">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" /> 
+                    </svg>
+                </div>
+                <h2>选款系统</h2>
+                <p>用于选款系统,并展示客户选择的商品清单。</p>
             </div>
         </div>
     </div>
@@ -170,6 +180,10 @@
 
         document.getElementById('imageViewerCard').addEventListener('click', function () {
             window.location.href = 'ImageViewer/ImageViewer.html';
+        });
+
+        document.getElementById('Picking').addEventListener('click', function () {
+            window.location.href = 'Picking/Picking.html';
         });
     </script>
 </body>
