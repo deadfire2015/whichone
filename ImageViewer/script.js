@@ -432,9 +432,8 @@ class ImageSizeViewer {
     }
     
     validatePrintCode(printCode) {
-        // 检查是否包含空格、-、_等非法字符
-        const invalidChars = /[\s\-_]/;
-        return !invalidChars.test(printCode);
+        // 不再限制特殊字符，总是返回true
+        return true;
     }
     
     handleInlineWidthChange(e, index) {
@@ -600,21 +599,18 @@ class ImageSizeViewer {
     restrictPrintCodeInput(e) {
         const charCode = e.which ? e.which : e.keyCode;
         
-        // 允许字母、数字、退格、删除、方向键、Tab键
-        if ((charCode >= 65 && charCode <= 90) || // A-Z
-            (charCode >= 97 && charCode <= 122) || // a-z
-            (charCode >= 48 && charCode <= 57) || // 0-9
-            charCode === 8 || // 退格
-            charCode === 46 || // 删除
-            charCode === 37 || // 左箭头
-            charCode === 39 || // 右箭头
-            charCode === 9) {  // Tab
-            return true;
+        // 只阻止控制字符，但允许所有可打印字符（包括特殊符号）
+        if (charCode < 32 && 
+            charCode !== 8 &&  // 退格
+            charCode !== 9 &&  // Tab
+            charCode !== 13 && // 回车键
+            charCode !== 27) { // ESC键
+            e.preventDefault();
+            return false;
         }
         
-        // 阻止空格、-、_等非法字符
-        e.preventDefault();
-        return false;
+        // 允许所有可打印字符，包括字母、数字、特殊符号等
+        return true;
     }
     
     showLoading() {
