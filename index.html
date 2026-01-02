@@ -165,6 +165,18 @@
                 <h2>选款系统</h2>
                 <p>用于选款系统,并展示客户选择的商品清单。</p>
             </div>
+            <!-- 尺寸表生成器卡片 -->
+            <div class="card" id="sizeChartGenerator">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                </div>
+                <h2>尺寸表生成器</h2>
+                <p>生成专业的尺寸表图片，支持自定义主题和导出功能。</p>
+            </div>
+            
         </div>
     </div>
 
@@ -184,6 +196,9 @@
 
         document.getElementById('Picking').addEventListener('click', function () {
             window.location.href = 'Picking/Picking.html';
+        });
+        document.getElementById('sizeChartGenerator').addEventListener('click', function () {
+            window.location.href = '../petSize/petSize.html';
         });
     </script>
 </body>
