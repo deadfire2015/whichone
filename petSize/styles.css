@@ -629,3 +629,6 @@ body {
     background: transparent;
     margin-bottom: 0;
 }
+#phoneSizeChart .footer-text{
+    width: 100%;
+}

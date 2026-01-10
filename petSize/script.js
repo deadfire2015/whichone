@@ -229,8 +229,13 @@
                  </div>
              `;
              
-             // 在phoneSizeChart容器内添加新的phone-info
-             phoneSizeChart.appendChild(newPhoneInfo);
+             // 在phoneSizeChart容器内添加新的phone-info，插入到footer之前
+            const footer = phoneSizeChart.querySelector('.footer');
+            if (footer) {
+                phoneSizeChart.insertBefore(newPhoneInfo, footer);
+            } else {
+                phoneSizeChart.appendChild(newPhoneInfo);
+            }
              
              // 为新phone-info添加图片上传事件监听
              const fileInput = newPhoneInfo.querySelector('input[type="file"]');
