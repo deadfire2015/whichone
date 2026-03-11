@@ -134,8 +134,17 @@
      // 单位转换函数
      // cm转in：1cm = 0.393701in
      function cmToIn(cm) {
-         if (!cm || isNaN(cm)) return '';
-         return parseFloat(cm * 0.393701).toFixed(2);
+         if (!cm) return '';
+         
+         // 处理范围值，如"10-20"
+         if (cm.includes('-')) {
+             const [min, max] = cm.split('-');
+             return `${parseFloat(min * 0.393701).toFixed(2)}-${parseFloat(max * 0.393701).toFixed(2)}`;
+         } else {
+             // 处理单个值
+             if (isNaN(cm)) return '';
+             return parseFloat(cm * 0.393701).toFixed(2);
+         }
      }
  
      // kg转lb：1kg = 2.20462lb
